@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual — Boceto a Render 3D</title>
+<style>
+:root{--t:#1f2329;--s:#5d6672;--a:#1f6fd1;--b:#d9dde3;--f:#f6f7f9}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--t);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.pag{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+header.port{border-bottom:3px solid var(--a);padding-bottom:16px;margin-bottom:26px}
+header.port h1{margin:0;font-size:30px}
+header.port p{margin:4px 0 0;color:var(--s)}
+h2{font-size:21px;margin:34px 0 10px;padding-top:6px;border-top:1px solid var(--b)}
+h3{font-size:16px;margin:22px 0 6px}
+p,li{margin:6px 0}
+img{max-width:100%;border:1px solid var(--b);border-radius:6px;display:block;margin:12px auto}
+figure{margin:14px 0}
+figcaption{text-align:center;color:var(--s);font-size:13px}
+.caja{background:var(--f);border-left:4px solid var(--a);padding:10px 14px;border-radius:4px;margin:12px 0}
+kbd{border:1px solid var(--b);border-bottom-width:2px;border-radius:4px;padding:0 5px;font:12px ui-monospace,monospace;background:#fff}
+code{font:13px ui-monospace,monospace;background:var(--f);padding:0 4px;border-radius:3px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+th,td{border:1px solid var(--b);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--f)}
+.ind{columns:2;gap:30px;font-size:14px}
+.ind a{color:var(--a);text-decoration:none}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.dos img{margin:6px auto}
+footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-top:10px;color:var(--s);font-size:12.5px}
+@media (max-width:700px){.dos{grid-template-columns:1fr}.ind{columns:1}}
+@media print{
+  body{font-size:10.5pt}
+  .pag{max-width:none;padding:0}
+  h2{break-after:avoid}
+  h3{break-after:avoid}
+  figure,table,.caja,.dos{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+  @page{size:A4;margin:13mm 13mm 14mm}
+}
+</style>
+</head>
+<body><div class="pag">
+
+<header class="port">
+  <h1>Boceto a Render 3D</h1>
+  <p>Manual de uso · versión 3.3 · De un boceto a mano a una imagen realista del mueble, sin internet · Por Eloi A.A.</p>
+</header>
+
+<div class="ind">
+  <a href="#que">1. Qué es</a><br>
+  <a href="#abrir">2. Abrir el programa</a><br>
+  <a href="#pantalla">3. La pantalla</a><br>
+  <a href="#ejes">4. Ejes y vistas</a><br>
+  <a href="#boceto">5. Paso 1 · El boceto</a><br>
+  <a href="#piezas">6. Paso 2 · Las piezas</a><br>
+  <a href="#seleccion">7. Selección, grupos y series</a><br>
+  <a href="#contorno">8. Piezas con contorno y DXF/SVG</a><br>
+  <a href="#cajones">9. Cajones, bisagras y movimiento</a><br>
+  <a href="#materiales">10. Paso 3 · Materiales y cantos</a><br>
+  <a href="#fotos">11. Maderas desde fotos</a><br>
+  <a href="#escena">12. Paso 4 · Escena y luz</a><br>
+  <a href="#render">13. Paso 5 · El render</a><br>
+  <a href="#lamina">14. Lámina técnica (PDF y DXF)</a><br>
+  <a href="#archivos">15. Guardar, abrir, despiece y Anidador</a><br>
+  <a href="#teclas">16. Atajos de teclado</a><br>
+  <a href="#consejos">17. Consejos para que parezca una foto</a><br>
+  <a href="#limites">18. Limitaciones</a>
+</div>
+
+<h2 id="que">1. Qué es</h2>
+<p><b>Boceto a Render 3D</b> convierte el boceto de un mueble en una imagen realista. No usa inteligencia artificial: el mueble se construye con <b>piezas</b> (tableros, patas, tiradores, cajones…) que se dibujan en alzado, planta y perfil, igual que en un plano. Con esas piezas el programa monta el modelo 3D, le pone madera, luz y sombras, y genera la imagen final en PNG. También abre puertas y cajones, y muestra el mueble despiezado (vista explosionada).</p>
+<p>Funciona en cualquier ordenador, sin tarjeta gráfica potente y sin conexión a internet.</p>
+<figure><img src="img/render_estudio.png" alt="Render de la mesita de ejemplo"><figcaption>Render de la mesita de ejemplo en «Estudio blanco».</figcaption></figure>
+
+<h2 id="abrir">2. Abrir el programa</h2>
+<ul>
+  <li>Abre con doble clic el archivo <b>Boceto_Render3D.html</b>. Se abre en el navegador (Chrome, Edge o Firefox actuales).</li>
+  <li>El programa necesita su carpeta completa: <code>assets/</code> (programa, texturas, maderas del aula y ejemplo) y <code>ayuda/</code> (este manual). Si lo copias a un USB, copia la carpeta entera.</li>
+  <li>La primera vez se abre la <b>mesita de ejemplo</b>. Después recuerda el último trabajo (autoguardado en el navegador).</li>
+</ul>
+
+<h2 id="pantalla">3. La pantalla</h2>
+<figure><img src="img/pantalla.png" alt="Pantalla del programa"><figcaption>Con el grupo «Cajón superior» seleccionado y el cajón medio abierto en el 3D.</figcaption></figure>
+<table>
+  <tr><th>Zona</th><th>Para qué sirve</th></tr>
+  <tr><td>Barra superior</td><td>Nuevo, Abrir, Guardar, Ejemplo, Deshacer/Rehacer, <b>📋 Despiece</b> (hoja de cálculo o Anidador), <b>📐 Lámina</b> técnica, <b>📷 Render</b>, modo oscuro y esta ayuda.</td></tr>
+  <tr><td>Panel izquierdo</td><td>Herramientas de dibujo, rejilla e imán, boceto de fondo, <b>Insertar</b> (cuerpo, frentes, cajón, bisagras, patas, tirador, DXF/SVG, maderas) y la lista de piezas y grupos.</td></tr>
+  <tr><td>Centro</td><td>Tres vistas 2D (cada una puede ser la que elijas) y la vista 3D. Bajo el 3D están los deslizadores <b>🚪 Abrir</b> y <b>💥 Explosión</b>. Con <b>3D grande</b> o <b>Solo 3D</b> cambias la distribución.</td></tr>
+  <tr><td>Panel derecho</td><td>Medidas, material, tablero y cantos de lo seleccionado; botones de duplicar, simetría, grupos y series; movimiento del grupo; escenario, luz, objetivo y desenfoque.</td></tr>
+</table>
+<h3>Plegar apartados y ocultar paneles</h3>
+<ul>
+  <li>Cada apartado de los paneles (Herramientas, Boceto, Insertar, Piezas, Pieza seleccionada, Escena y luz) se <b>pliega o despliega</b> haciendo clic en su título: ▾ desplegado, ▸ plegado.</li>
+  <li>Los botones <b>◀</b> (a la izquierda de la barra de vistas) y <b>▶</b> (a la derecha) <b>ocultan el panel</b> izquierdo o derecho entero para dejar más sitio a las vistas. El mismo botón lo vuelve a mostrar.</li>
+  <li>El programa recuerda qué apartados y paneles dejaste plegados u ocultos.</li>
+  <li>La versión del programa aparece junto a su nombre, en la barra superior.</li>
+</ul>
+<div class="caja">Las <b>ventanas emergentes</b> (tirador, cajón, contorno, lámina…) se pueden <b>arrastrar por su barra de título</b> (⠿) para ver la vista que tapan. Doble clic en el título las vuelve a centrar; cada ventana nueva se abre centrada.</div>
+
+<h2 id="ejes">4. Ejes y vistas</h2>
+<p>Todas las medidas van en <b>centímetros</b>. El mueble se coloca así:</p>
+<ul>
+  <li><b>X</b>: ancho, de izquierda a derecha.</li>
+  <li><b>Y</b>: alto, desde el suelo (Y = 0) hacia arriba.</li>
+  <li><b>Z</b>: fondo, de atrás hacia delante. <b>El frente del mueble mira hacia +Z.</b></li>
+</ul>
+<table>
+  <tr><th>Vista</th><th>Se mira desde</th><th>Ejes en pantalla</th></tr>
+  <tr><td>Alzado</td><td>Delante</td><td>X horizontal, Y vertical</td></tr>
+  <tr><td>Planta</td><td>Arriba (va debajo del alzado)</td><td>X horizontal, Z vertical: <b>el frente queda abajo</b></td></tr>
+  <tr><td>Perfil izquierdo</td><td>La izquierda (va a la derecha del alzado)</td><td>Z horizontal: <b>el frente queda a la derecha</b>; Y vertical</td></tr>
+</table>
+<div class="caja">En cada vista solo cambias dos medidas de la pieza. La tercera se ajusta en otra vista o con los números del panel derecho.</div>
+<h3>Elegir y agrandar las vistas</h3>
+<p>Cada uno de los tres paneles 2D tiene arriba un desplegable para elegir qué vista muestra. Puedes poner cualquiera de estas seis, y repetirlas si quieres:</p>
+<table>
+  <tr><th>Vista</th><th>Se mira desde</th><th>En pantalla</th></tr>
+  <tr><td>Alzado (frente)</td><td>Delante</td><td>X hacia la derecha, Y hacia arriba</td></tr>
+  <tr><td>Vista posterior</td><td>Detrás</td><td>X hacia la izquierda (la izquierda del mueble queda a la derecha)</td></tr>
+  <tr><td>Planta (superior)</td><td>Arriba</td><td>X hacia la derecha; el frente abajo</td></tr>
+  <tr><td>Vista hormiga (inferior)</td><td>Abajo</td><td>X hacia la izquierda; el frente abajo</td></tr>
+  <tr><td>Perfil izquierdo</td><td>La izquierda</td><td>El frente a la derecha</td></tr>
+  <tr><td>Perfil derecho</td><td>La derecha</td><td>El frente a la izquierda</td></tr>
+</table>
+<p>En todas se dibuja, se mueve y se seleccionan piezas igual; las flechas del teclado mueven hacia donde apuntan en pantalla. El panel que eliges se recuerda para la próxima vez.</p>
+<div class="dos">
+  <div><p>El botón <b>⤢</b> de cada panel (también el del 3D) lo <b>agranda</b>: ocupa casi toda la zona central y los otros tres quedan pequeños en una columna a la derecha. <b>⤡</b> lo devuelve a su tamaño. Los botones «Vistas + 3D», «3D grande» y «Solo 3D» también restauran la distribución.</p></div>
+  <img src="img/vistas.png" alt="Vista posterior agrandada">
+</div>
+<h3>Moverse por las vistas</h3>
+<ul>
+  <li><b>Zoom</b>: rueda del ratón (o pellizco en pantalla táctil).</li>
+  <li><b>Desplazar</b>: botón derecho o central, o <kbd>Espacio</kbd> + arrastrar. (Arrastrar con el botón izquierdo en vacío hace una selección por ventana.)</li>
+  <li><b>Encuadrar</b>: botón ⤢ Encuadrar, tecla <kbd>F</kbd> o doble clic en vacío.</li>
+  <li><b>3D</b>: arrastra para girar, botón derecho para desplazar, rueda para acercar. Los botones Frente, ¾ izq, ¾ der y Arriba colocan la cámara.</li>
+</ul>
+
+<h2 id="boceto">5. Paso 1 · El boceto</h2>
+<p>Haz una foto o escanea tu dibujo. Hay dos formas de usarlo, y se pueden combinar:</p>
+<h3>Referencia flotante</h3>
+<p><b>🗗 Referencia…</b> abre la imagen en una ventana pequeña que puedes mover (arrastrando el título) y cambiar de tamaño (esquina inferior derecha). Es la forma de usar un boceto <b>en perspectiva</b>: lo miras mientras construyes las piezas.</p>
+<h3>Calcar sobre una vista</h3>
+<ol>
+  <li>Haz clic en la vista donde quieres el boceto (queda marcada en azul).</li>
+  <li>Pulsa <b>🖼 Calcar sobre vista…</b> y elige la imagen.</li>
+  <li>Pulsa <b>📏 Escalar</b>, marca dos puntos del dibujo cuya medida conozcas y escribe la medida real en cm.</li>
+  <li>Con <b>✥ Mover boceto</b> arrastra el dibujo hasta que su esquina coincida con el origen.</li>
+  <li>Ajusta la <b>opacidad</b>, ocúltalo o quítalo con los controles que aparecen.</li>
+</ol>
+<figure><img src="img/calcar.png" alt="Boceto de alzado de fondo" style="max-width:480px"><figcaption>Alzado a mano de fondo, escalado, con las piezas calcadas encima.</figcaption></figure>
+
+<h2 id="piezas">6. Paso 2 · Las piezas</h2>
+<p>Cada pieza es una <b>caja</b> (tablero, listón, pata cuadrada…), un <b>cilindro</b> (pata o tirador redondo) o una pieza <b>con contorno</b> (apartado 8).</p>
+<h3>Dibujar una pieza</h3>
+<ol>
+  <li>Elige <b>▭ Pieza</b> (o la tecla <kbd>R</kbd>) y arrastra en una vista: el rectángulo da dos medidas.</li>
+  <li>La tercera sale de <b>Al dibujar, 3.ª medida</b>: <i>Igual que el conjunto</i> (ocupa todo el fondo, alto o ancho de lo que ya hay) o <i>Grosor de tablero</i> (1,9 cm por defecto, en la cara más cercana a quien mira).</li>
+</ol>
+<h3>Mover y cambiar medidas</h3>
+<ul>
+  <li>Con <b>⬚ Seleccionar</b> (<kbd>V</kbd>), arrastra para mover. Con <kbd>Mayús</kbd> mientras arrastras se mueve solo en horizontal o en vertical.</li>
+  <li>Con una sola pieza seleccionada, arrastra los cuadraditos de los bordes para cambiar sus medidas.</li>
+  <li>Las flechas del teclado mueven lo seleccionado un paso de rejilla (×10 con <kbd>Mayús</kbd>).</li>
+  <li>El <b>imán</b> pega los bordes a los cantos de otras piezas (línea rosa). La <b>rejilla</b> redondea a 1 mm, 5 mm, 1 cm o 5 cm.</li>
+  <li>Para medidas exactas, escribe los números en el panel derecho: <b>posición</b> (esquina izquierda, inferior y trasera) y <b>medida</b> (ancho, alto y fondo).</li>
+</ul>
+<h3>Plantillas (Insertar)</h3>
+<table>
+  <tr><th>Botón</th><th>Qué crea</th></tr>
+  <tr><td>▤ Cuerpo</td><td>Dos laterales, techo y suelo entre laterales, trasera de MDF opcional y estantes repartidos.</td></tr>
+  <tr><td>▯ Frente/puerta</td><td>Una puerta o varios frentes de cajón apilados con su junta, delante del conjunto.</td></tr>
+  <tr><td>🗄 Cajón</td><td>La caja completa detrás del frente seleccionado (apartado 9).</td></tr>
+  <tr><td>🚪 Bisagras</td><td>Bisagras y giro de la puerta seleccionada (apartado 9).</td></tr>
+  <tr><td>╥ 4 patas</td><td>Cuatro patas cuadradas, redondas o afiladas, agrupadas. Puede subir el mueble para que apoye en ellas.</td></tr>
+  <tr><td>━ Tirador</td><td>Un tirador centrado, arriba, abajo o a un lado del frente seleccionado. Entra en el grupo del frente.</td></tr>
+  <tr><td>🖊 Pieza a mano…</td><td>Una pieza nueva dibujada en el Calcador (apartado 8).</td></tr>
+  <tr><td>⤓ DXF / SVG…</td><td>Piezas con contorno desde un dibujo (apartado 8).</td></tr>
+  <tr><td>🪵 Maderas…</td><td>Fotos de madera, biblioteca y maderas del aula (apartado 11).</td></tr>
+</table>
+
+<h2 id="seleccion">7. Selección, grupos y series</h2>
+<h3>Seleccionar varias piezas</h3>
+<ul>
+  <li><kbd>Mayús</kbd> o <kbd>Ctrl</kbd> + clic añade o quita piezas, en las vistas, en el 3D o en la lista.</li>
+  <li>Arrastrar en vacío hace una <b>selección por ventana</b>: de izquierda a derecha (azul) coge las piezas que quedan <b>dentro</b>; de derecha a izquierda (verde) coge también las que <b>toca</b>.</li>
+  <li><kbd>Ctrl</kbd>+<kbd>A</kbd> selecciona todo y <kbd>Esc</kbd> quita la selección.</li>
+  <li>Con varias piezas se mueven a la vez; en el panel derecho la posición es la del conjunto y el material, acabado o canto se aplican a todas.</li>
+</ul>
+<h3>Grupos</h3>
+<ul>
+  <li><b>▣ Agrupar</b> (<kbd>Ctrl</kbd>+<kbd>G</kbd>) une lo seleccionado; escribe el nombre del grupo en «Nombre». <b>▢ Desagrupar</b> (<kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>G</kbd>) lo deshace.</li>
+  <li>Al hacer clic en una pieza de un grupo se selecciona el grupo entero. Para coger una sola pieza: <b>doble clic</b> sobre ella, <kbd>Alt</kbd>+clic, o clic en su nombre dentro de la lista.</li>
+  <li>En la lista, el grupo se pliega o despliega con ▸/▾ y se oculta entero con 👁.</li>
+  <li>Duplicar, simetría y eliminar trabajan con todo lo seleccionado; los grupos se copian como grupos nuevos. La simetría de una puerta cambia sus bisagras de lado.</li>
+</ul>
+<h3>Repetir en serie</h3>
+<div class="dos">
+  <div><p><b>⋯ Repetir…</b> copia lo seleccionado varias veces en una dirección: listones de un somier, baldas a igual distancia, módulos iguales… Indica el número de copias, la dirección (X, Y o Z) y la distancia, que puede ser el <b>hueco libre</b> entre copias o el <b>paso</b> de inicio a inicio.</p></div>
+  <img src="img/serie.png" alt="Diálogo repetir en serie">
+</div>
+
+<h2 id="contorno">8. Piezas con contorno y DXF/SVG</h2>
+<p>Una pieza puede tener un contorno distinto del rectángulo. El contorno se dibuja en una vista y se <b>extruye</b> con el grosor de la pieza.</p>
+<div class="dos">
+  <div>
+    <p>Selecciona la pieza y pulsa <b>✏ Plantilla…</b>:</p>
+    <ul>
+      <li><b>Se dibuja en la vista</b>: alzado (grosor en Z), planta (grosor en Y, como una tapa) o perfil (grosor en X, como un lateral).</li>
+      <li><b>Forma</b>: esquinas redondeadas o achaflanadas (cada esquina con su medida), trapecio (patas afiladas, laterales inclinados), lado superior en arco (cabeceros), <b>uñero</b> (tirador mecanizado) o un contorno desde DXF/SVG.</li>
+      <li><b>Agujero pasante</b>: un agujero redondo centrado, por ejemplo para pasar cables.</li>
+    </ul>
+    <p>El contorno se estira con la pieza si luego cambias sus medidas. Para volver a una caja normal, elige «Rectángulo (sin contorno)».</p>
+  </div>
+  <img src="img/contorno.png" alt="Diálogo de contorno">
+</div>
+<h3>Dibujar a mano en el Calcador</h3>
+<p>El programa trae su propia copia del <b>Calcador de contornos</b> (en <code>assets/calcador/</code>), que se abre en una ventana grande en modo <b>«Pieza 3D»</b>: solo dibujo y cotas, sin G-code ni mecanizado. Ahí tienes todas sus herramientas: rectas, arcos (por 3 puntos, tangentes), círculos, ranuras, polígonos, enlaces y chaflanes, recortar, alargar, equidistantes, cotas, coordenadas escritas…</p>
+<ul>
+  <li><b>🖊 Calcador…</b> (en el panel de la pieza) abre la pieza seleccionada en la vista donde está su contorno o, si es una caja, en la vista que la muestra de frente (la de su cara grande). Llega como un rectángulo con sus medidas en mm, o con el contorno que ya tenía para retocarlo.</li>
+  <li><b>🖊 Pieza a mano…</b> (en Insertar) crea una pieza nueva dibujada desde cero, en la vista activa y con el grosor de tablero indicado.</li>
+  <li>Si esa vista tiene un <b>boceto de fondo</b>, aparece en el Calcador en su sitio y a su escala, listo para calcarlo.</li>
+  <li>Al pulsar <b>«✓ Usar en la pieza»</b>, el contorno mayor es la pieza y los que quedan dentro, sus huecos. Otros contornos sueltos se convierten en piezas nuevas, en su posición. La pieza toma las medidas del dibujo; la esquina del rectángulo inicial (el 0,0) sigue en su sitio. <b>«✕ Cancelar»</b> o ✕ cierran sin cambiar nada.</li>
+  <li>El dibujo se guarda con la pieza, con sus <b>arcos exactos</b>: al volver a abrirlo sigue igual, y el despiece para el Anidador lleva esos arcos (no polilíneas), mientras la pieza no se haya estirado en una sola dirección.</li>
+</ul>
+<div class="dos">
+  <figure><img src="img/calcador.png" alt="Calcador en modo Pieza 3D"><figcaption>El lateral derecho abierto en el Calcador.</figcaption></figure>
+  <figure><img src="img/calcador_aplicado.png" alt="Contorno aplicado"><figcaption>De vuelta en el 3D: frente en arco y agujero pasante.</figcaption></figure>
+</div>
+<div class="caja">El Calcador funciona dentro de la ventana igual que solo. Sus cambios no tocan el trabajo guardado del Calcador normal (en este modo no hay autoguardado). Si la ventana se queda en blanco, comprueba que está el archivo <code>assets/calcador/calcador.html</code>.</div>
+<h3>Importar DXF o SVG (por ejemplo, desde el Calcador)</h3>
+<div class="dos">
+  <img src="img/importar.png" alt="Importar DXF">
+  <div>
+    <p><b>⤓ DXF / SVG…</b> lee un dibujo y crea una pieza por cada contorno cerrado. Los contornos que quedan dentro de otro se convierten en <b>huecos</b>.</p>
+    <ul>
+      <li>DXF: polilíneas (con arcos), líneas, arcos, círculos, elipses y splines. Las líneas sueltas que se tocan se unen en contornos.</li>
+      <li>Indica las <b>unidades</b> del dibujo (el Calcador trabaja en mm), la <b>vista</b> en la que va, el grosor y el material.</li>
+      <li>Desde el diálogo de contorno también puedes poner un DXF/SVG a una pieza que ya existe.</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="cajones">9. Cajones, bisagras y movimiento</h2>
+<h3>Cajón completo</h3>
+<p>Selecciona el frente y pulsa <b>🗄 Cajón</b>. El programa busca los tableros verticales a cada lado para calcular el hueco y propone las medidas: holgura de las guías, alto y fondo de la caja (en múltiplos de 5 cm, como las guías), grosores y material. Crea dos laterales, contrafrente, trasera, fondo de MDF y, si quieres, las guías de aluminio. El frente, su tirador y la caja quedan en un grupo con movimiento de <b>cajón</b>.</p>
+<h3>Bisagras</h3>
+<p>Selecciona la puerta y pulsa <b>🚪 Bisagras</b>. Elige el lado (izquierda, derecha, arriba o abajo para las abatibles), el tipo (de <b>cazoleta</b>, ocultas por dentro, o <b>pernio</b>, vistas), el número y el ángulo de apertura.</p>
+<h3>Movimiento de cualquier grupo</h3>
+<div class="dos">
+  <div>
+    <p>Con un grupo seleccionado (o una sola pieza, que se agrupa sola), en <b>Movimiento</b> elige el tipo: cajón, puerta con bisagras a la izquierda o a la derecha, o abatible arriba o abajo, y su <b>recorrido</b> (cm) o <b>ángulo</b> (°). El giro se hace por el canto trasero de la pieza mayor del grupo.</p>
+    <p>Bajo el 3D:</p>
+    <ul>
+      <li><b>🚪 Abrir</b>: abre todas las puertas y cajones a la vez (0 = cerrado, al final = abierto del todo). ▶ lo anima.</li>
+      <li><b>💥 Explosión</b>: separa las piezas desde el centro del mueble para ver cómo va montado. ▶ lo anima y aleja la cámara.</li>
+    </ul>
+    <p>Las vistas 2D siempre muestran el mueble cerrado y montado. El render usa el 3D tal como esté.</p>
+  </div>
+  <img src="img/movimiento.png" alt="Panel de movimiento" style="max-width:270px">
+</div>
+<div class="dos">
+  <figure><img src="img/render_abierto.png" alt="Cajones abiertos"><figcaption>Cajones abiertos, objetivo de 85 mm y desenfoque f/2,8.</figcaption></figure>
+  <figure><img src="img/render_explosion.png" alt="Vista explosionada"><figcaption>Vista explosionada.</figcaption></figure>
+</div>
+
+<h2 id="materiales">10. Paso 3 · Materiales y cantos</h2>
+<div class="dos">
+  <div>
+    <ul>
+      <li><b>Material</b>: maderas, melaminas, lacado del color que elijas, metales y cristal; además las maderas de tus fotos.</li>
+      <li><b>Acabado</b>: mate, satinado o brillo (barniz con reflejos).</li>
+      <li><b>Dirección de la veta</b>: en automático sigue el lado más largo; cámbiala, por ejemplo, para que los frentes de cajón la tengan horizontal.</li>
+      <li><b>Canto redondeado</b>: radio de la arista en mm. Un canto de 1 a 2 mm hace que la luz «brille» en las aristas.</li>
+    </ul>
+  </div>
+  <img src="img/propiedades.png" alt="Panel de la pieza" style="max-width:270px">
+</div>
+<h3>Tablero (alma) y cantos</h3>
+<p>Para tableros se elige de qué está hecho el interior y cómo se terminan los cantos:</p>
+<table>
+  <tr><th>Tablero (alma)</th><th>Cómo se ve</th></tr>
+  <tr><td>Automático</td><td>Madera maciza si el material es madera; aglomerado si es melamina o lacado.</td></tr>
+  <tr><td>Madera maciza</td><td>Los cantos muestran la veta y las testas, los anillos.</td></tr>
+  <tr><td>Aglomerado · MDF · Contrachapado</td><td>Según los <b>Cantos</b>: <i>A juego</i> (chapa o PVC del mismo material, con la veta a lo largo del canto), <i>Sin canto</i> (se ve el alma: virutas, MDF o las chapas del contrachapado) o <i>De otro material</i> (por ejemplo, melamina antracita con canto de roble).</td></tr>
+</table>
+<figure><img src="img/render_cantos.png" alt="Muestra de cantos"><figcaption>De abajo arriba: melamina blanca sin canto (aglomerado), antracita con canto de roble, contrachapado sin canto y roble macizo.</figcaption></figure>
+
+<h2 id="fotos">11. Maderas desde fotos</h2>
+<div class="dos">
+  <div>
+    <p>Con fotos de tableros reales el render gana mucho realismo. En <b>🪵 Maderas…</b> → <b>📷 Añadir madera desde foto…</b>:</p>
+    <ul>
+      <li>Usa una foto frontal, bien iluminada y con la <b>veta en horizontal</b> (o marca «Girar 90°»).</li>
+      <li><b>Ancho real</b>: cuántos cm de tablero abarca la foto, para que la veta tenga su tamaño real.</li>
+      <li><b>Conservar del centro</b>: recorta los bordes si la foto tiene fondo o está torcida en las esquinas.</li>
+      <li><b>Igualar la luz</b>: quita las zonas más claras u oscuras que deja el flash o una ventana.</li>
+      <li><b>Repetible sin costuras</b>: funde los bordes para que, al repetirse en piezas grandes, no se vean cortes. La vista previa muestra la foto repetida.</li>
+    </ul>
+  </div>
+  <img src="img/foto.png" alt="Madera desde foto">
+</div>
+<h3>Dónde se guardan</h3>
+<table>
+  <tr><th>Lugar</th><th>Quién la ve</th></tr>
+  <tr><td>En este proyecto</td><td>Va dentro del archivo <code>.boceto3d.json</code>: quien abra el proyecto la tiene.</td></tr>
+  <tr><td>Mi biblioteca</td><td>Se guarda en el navegador de este ordenador y aparece en todos tus proyectos.</td></tr>
+  <tr><td>Del aula</td><td>Pulsa <b>⬇ Exportar para el aula</b> y copia el archivo <code>maderas_aula.js</code> en <code>assets/texturas/</code> (sustituyendo el que hay). Todos los ordenadores con esa carpeta tendrán esas maderas.</td></tr>
+</table>
+
+<h2 id="escena">12. Paso 4 · Escena y luz</h2>
+<table>
+  <tr><th>Control</th><th>Efecto</th></tr>
+  <tr><td>Escenario</td><td>Estudio blanco, gris u oscuro (fondo liso tipo catálogo) o Salón (suelo de parquet, pared y rodapié).</td></tr>
+  <tr><td>Luz: giro / altura</td><td>De dónde viene la luz principal. Una luz alta y de lado (unos 40–60°) da sombras naturales.</td></tr>
+  <tr><td>Suavidad de sombra</td><td>Tamaño de la ventana de luz: a más suavidad, sombras más difuminadas.</td></tr>
+  <tr><td>Intensidad / Luz ambiente / Exposición</td><td>Fuerza de la luz principal, del relleno y brillo general.</td></tr>
+  <tr><td>Objetivo</td><td>24–35 mm exageran la perspectiva; 85 mm es la típica foto de producto.</td></tr>
+  <tr><td>Desenfoque de fondo</td><td>Solo en el render final. Enfoca el centro del mueble y desenfoca lo que está más cerca o más lejos, como una foto con poca profundidad de campo. Cuanto menor es el número f, más desenfoque. Se nota más con objetivos largos y en el escenario Salón.</td></tr>
+</table>
+<figure><img src="img/render_salon.png" alt="Render en el escenario salón"><figcaption>Escenario «Salón» con los cajones medio abiertos.</figcaption></figure>
+
+<h2 id="render">13. Paso 5 · El render</h2>
+<div class="dos">
+  <div>
+    <ol>
+      <li>Encuadra el mueble en la vista 3D como quieras la foto (usa <b>Solo 3D</b> para verlo grande). Si quieres, abre cajones o explosiona.</li>
+      <li>Pulsa <b>📷 Render</b>, elige tamaño, proporción, calidad y desenfoque, y pulsa <b>Renderizar</b>.</li>
+      <li>Cuando termine, pulsa <b>💾 Guardar PNG</b>.</li>
+    </ol>
+    <p>En cada <b>pasada</b> el programa mueve un poco la luz y la cámara y las promedia: sombras suaves, oscurecimiento en juntas y rincones, bordes limpios y, si lo has pedido, desenfoque. A más pasadas, más limpia queda la imagen; con desenfoque conviene usar «Alta · 200».</p>
+  </div>
+  <img src="img/dialogo_render.png" alt="Diálogo de render">
+</div>
+
+<h2 id="lamina">14. Lámina técnica (PDF y DXF)</h2>
+<p><b>📐 Lámina</b> dibuja el plano del mueble con las vistas que elijas, acotado y con cajetín, a partir de las mismas piezas que el render. La vista previa se actualiza con cada cambio.</p>
+<figure><img src="img/lamina_dialogo.png" alt="Diálogo de la lámina"></figure>
+<table>
+  <tr><th>Opción</th><th>Qué hace</th></tr>
+  <tr><td>Formato</td><td>A4 o A3 horizontal, con marco (20 mm a la izquierda para encuadernar, 10 mm en el resto).</td></tr>
+  <tr><td>Sistema</td><td><b>Europeo</b> (1.er diedro): la planta debajo del alzado y el perfil izquierdo a su derecha. <b>Americano</b> (3.er diedro): la planta encima y el perfil derecho a la derecha. La vista posterior va siempre a la derecha del todo.</td></tr>
+  <tr><td>Escala</td><td>Automática (la mayor que cabe: 1:1, 1:2, 1:5, 1:10, 1:15, 1:20, 1:25, 1:50…) o la que elijas.</td></tr>
+  <tr><td>Vistas</td><td>Cualquiera de las seis y la <b>perspectiva</b>, que es una imagen de la vista 3D tal como la tengas (también abierta o explosionada).</td></tr>
+  <tr><td>Cotas</td><td>Sin cotas, <b>generales</b> (ancho, alto y fondo totales) o <b>generales y parciales</b> (cadenas con las posiciones de los cantos visibles). Siempre en mm.</td></tr>
+  <tr><td>Aristas ocultas</td><td>Dibuja en discontinua lo que queda tapado por otras piezas: cajas de los cajones, traseras, guías…</td></tr>
+  <tr><td>Cajetín</td><td>Título, autor o alumno, centro, fecha, nº de hoja y un logo propio (JPG o PNG). La escala, el sistema y las unidades se ponen solos. Se recuerda en el proyecto.</td></tr>
+</table>
+<p>Se descarga de tres formas:</p>
+<ul>
+  <li><b>⬇ PDF</b>: la lámina para imprimir o entregar.</li>
+  <li><b>⬇ DXF lámina</b>: la misma hoja en mm de papel, con capas VISIBLES, OCULTAS (línea discontinua), COTAS, TEXTOS, MARCO y CAJETIN.</li>
+  <li><b>⬇ DXF a 1:1</b>: solo las vistas a tamaño real (en mm), con las mismas capas. Los textos y las flechas tienen el tamaño de la escala de la lámina, para imprimirlo a esa escala desde el CAD.</li>
+</ul>
+<div class="dos">
+  <figure><img src="img/lamina.png" alt="Lámina A4"><figcaption>A4, sistema europeo, cotas generales y perspectiva.</figcaption></figure>
+  <figure><img src="img/lamina_a3.png" alt="Lámina A3"><figcaption>A3, sistema americano, las seis vistas y cotas parciales.</figcaption></figure>
+</div>
+<div class="caja">Las aristas ocultas se calculan por piezas: una arista queda oculta si hay otra pieza más cerca del observador que la tapa. Los huecos de las piezas con contorno no dejan ver lo que hay detrás.</div>
+
+<h2 id="archivos">15. Guardar, abrir, despiece y Anidador</h2>
+<ul>
+  <li><b>💾 Guardar</b> descarga un archivo <code>.boceto3d.json</code> con todo: piezas, grupos y movimientos, contornos, bocetos, maderas de fotos, escena y cámara. <b>📂 Abrir</b> lo recupera (también los proyectos de la versión anterior).</li>
+  <li>El programa se <b>autoguarda</b> en el navegador. Si el proyecto lleva imágenes muy grandes puede que no quepa, y lo avisa: en ese caso usa Guardar.</li>
+  <li><b>📋 Despiece → Hoja de cálculo</b> descarga un <code>.csv</code> (LibreOffice Calc o Excel) con nombre, largo, ancho, grosor, material, observaciones (contorno, tipo de tablero y canto), grupo y cantidad. Las piezas iguales se agrupan.</li>
+  <li><b>📋 Despiece → Para el Anidador</b> descarga un <code>.zip</code> preparado para el <b>Anidador de tableros</b> de la Suite CNC (abajo).</li>
+  <li><b>🪑 Ejemplo</b> carga la mesita de noche con dos cajones completos para practicar.</li>
+</ul>
+<h3>Del mueble al Anidador</h3>
+<p>El .zip contiene:</p>
+<ul>
+  <li><b>Un .csv por cada tipo de tablero</b>, es decir, por material y grosor (por ejemplo, <code>Roble 19 mm.csv</code>, <code>Melamina blanca 16 mm.csv</code>). Tiene las columnas que lee el Anidador: <code>nombre; largo; ancho; cantidad; veta; canto largo; canto ancho; tipo de canto</code>, en mm.</li>
+  <li><b>Veta</b>: «sí» en las maderas, con el largo en la dirección de la veta de la pieza; «no» en melaminas y lacados.</li>
+  <li><b>Cantos</b>: 2 y 2 (todos) si el tablero lleva canto, con su tipo («Canto Roble»…); 0 si es madera maciza o «sin canto».</li>
+  <li><b>La carpeta <code>contornos</code></b>: cada pieza con contorno como proyecto del Calcador (.json), con sus huecos. Si el nombre acaba en (xN), hay N iguales: pon esa cantidad en el Anidador.</li>
+  <li>Un <code>LEEME.txt</code> con lo anterior. Los herrajes, metales, cristal y piezas cilíndricas no se incluyen.</li>
+</ul>
+<figure><img src="img/anidador.png" alt="Piezas abiertas en el Anidador"><figcaption>El .csv de «Roble 19 mm» y la tapa con esquinas redondeadas abiertos en el Anidador. Solo falta poner las medidas del tablero.</figcaption></figure>
+
+<h2 id="teclas">16. Atajos de teclado</h2>
+<table>
+  <tr><th>Tecla</th><th>Acción</th><th>Tecla</th><th>Acción</th></tr>
+  <tr><td><kbd>V</kbd></td><td>Seleccionar</td><td><kbd>R</kbd></td><td>Dibujar pieza</td></tr>
+  <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Deshacer</td><td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Rehacer</td></tr>
+  <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar</td><td><kbd>Supr</kbd></td><td>Eliminar</td></tr>
+  <tr><td><kbd>Ctrl</kbd>+<kbd>G</kbd></td><td>Agrupar</td><td><kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>G</kbd></td><td>Desagrupar</td></tr>
+  <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>Seleccionar todo</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Guardar</td></tr>
+  <tr><td>⤢ en un panel</td><td>Agrandar / restaurar esa vista</td><td>Desplegable del panel</td><td>Elegir la vista</td></tr>
+  <tr><td><kbd>Mayús</kbd>/<kbd>Ctrl</kbd>+clic</td><td>Añadir o quitar de la selección</td><td><kbd>Alt</kbd>+clic o doble clic</td><td>Una pieza dentro de su grupo</td></tr>
+  <tr><td>Flechas</td><td>Mover (×10 con <kbd>Mayús</kbd>)</td><td><kbd>F</kbd></td><td>Encuadrar todo</td></tr>
+  <tr><td><kbd>Espacio</kbd> + arrastrar</td><td>Desplazar la vista</td><td><kbd>Esc</kbd></td><td>Quitar selección</td></tr>
+</table>
+
+<h2 id="consejos">17. Consejos para que parezca una foto</h2>
+<ul>
+  <li><b>Construye como en el taller</b>: tableros separados, juntas de 2–3 mm entre frentes, cajones con su caja.</li>
+  <li><b>Redondea los cantos</b> 1–2 mm y elige bien el tablero y el canto: un aglomerado con el alma a la vista o un canto de otro color delatan enseguida si el render es creíble.</li>
+  <li><b>Usa fotos reales de madera</b> con su tamaño real, la luz igualada y repetibles.</li>
+  <li><b>Luz lateral y alta</b>, suavidad media y un objetivo de 50–85 mm; un poco de desenfoque ayuda en el escenario Salón.</li>
+  <li><b>Calidad alta</b> para la imagen definitiva; borrador para probar.</li>
+</ul>
+
+<h2 id="limites">18. Limitaciones</h2>
+<ul>
+  <li>No interpreta solo un boceto en perspectiva: las piezas se dibujan en las vistas, usando el boceto como guía.</li>
+  <li>Las piezas van alineadas con los ejes: no hay piezas giradas en el modelo (solo al abrir puertas). Los contornos son extrusiones rectas: no hay molduras, tallas ni tapizados.</li>
+  <li>El movimiento es para ver y presentar: no detecta choques entre piezas.</li>
+  <li>No calcula reflejos entre piezas ni la luz que rebota en colores. El render es realista, pero no tanto como el de un programa profesional de 3D.</li>
+</ul>
+
+<footer>
+  Boceto a Render 3D — Por Eloi A.A. · Programa con licencia EUPL-1.2 · Manual con licencia CC BY-SA 4.0 · Usa Three.js (licencia MIT).
+</footer>
+</div></body>
+</html>

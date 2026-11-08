@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boceto a Render 3D — Por Eloi A.A.</title>
+<link rel="stylesheet" href="assets/css/estilo.css">
+</head>
+<body>
+<header class="barra">
+  <div class="marca">
+    <span class="logo">◩</span>
+    <div><b>Boceto a Render 3D</b> <span class="version" id="version" title="Versión del programa">v3.3</span> <span class="autor">— Por Eloi A.A.</span></div>
+  </div>
+  <div class="grupo">
+    <button id="bNuevo" title="Proyecto nuevo">🗋 Nuevo</button>
+    <button id="bAbrir" title="Abrir proyecto (.json)">📂 Abrir</button>
+    <button id="bGuardar" title="Guardar proyecto (.json)">💾 Guardar</button>
+    <button id="bEjemplo" title="Cargar la mesita de ejemplo">🪑 Ejemplo</button>
+    <span class="sep"></span>
+    <button id="bDeshacer" title="Deshacer (Ctrl+Z)">↶</button>
+    <button id="bRehacer" title="Rehacer (Ctrl+Y)">↷</button>
+    <span class="sep"></span>
+    <button id="bDespiece" title="Despiece para hoja de cálculo o para el Anidador">📋 Despiece</button>
+    <button id="bLamina" title="Lámina técnica con vistas acotadas (PDF o DXF)">📐 Lámina</button>
+    <button id="bRender" class="primario" title="Generar la imagen final">📷 Render</button>
+    <span class="sep"></span>
+    <button id="bTema" title="Modo claro / oscuro">🌓</button>
+    <button id="bAyuda" title="Manual de uso">❓ Ayuda</button>
+  </div>
+</header>
+
+<main class="app">
+  <!-- ============ PANEL IZQUIERDO ============ -->
+  <aside class="panel izq">
+    <section>
+      <h3>Herramientas</h3>
+      <div class="herr">
+        <button data-herr="sel" class="activo" title="Seleccionar, mover y redimensionar (V). Mayús o Ctrl: añadir a la selección. Arrastrar en vacío: selección por ventana">⬚ Seleccionar</button>
+        <button data-herr="rect" title="Dibujar una pieza nueva arrastrando (R)">▭ Pieza</button>
+        <button data-herr="mover-boceto" title="Arrastrar el boceto de fondo de una vista">✥ Mover boceto</button>
+        <button data-herr="calibrar" title="Marca dos puntos en el boceto y escribe su medida real">📏 Escalar</button>
+      </div>
+      <label class="fila">Rejilla
+        <select id="sRejilla">
+          <option value="0.1">1 mm</option><option value="0.5" selected>5 mm</option>
+          <option value="1">1 cm</option><option value="5">5 cm</option><option value="0">Sin ajuste</option>
+        </select>
+      </label>
+      <label class="fila chk"><input type="checkbox" id="cImanes" checked> Imán a los cantos de otras piezas</label>
+      <label class="fila">Al dibujar, 3.ª medida
+        <select id="sTercera">
+          <option value="conjunto">Igual que el conjunto</option>
+          <option value="grosor">Grosor de tablero</option>
+        </select>
+      </label>
+      <label class="fila">Grosor de tablero (cm) <input type="number" id="nGrosor" value="1.9" step="0.1" min="0.1"></label>
+    </section>
+
+    <section>
+      <h3>Boceto</h3>
+      <p class="nota">Carga tu dibujo como fondo de una vista para calcarlo, o como referencia flotante.</p>
+      <div class="col2">
+        <button id="bBocetoVista">🖼 Calcar sobre vista…</button>
+        <button id="bReferencia">🗗 Referencia…</button>
+      </div>
+      <div id="bocetoCtl" class="oculto">
+        <label class="fila">Vista <select id="sBocetoVista">
+          <option value="alzado">Alzado (frente)</option><option value="posterior">Posterior</option><option value="planta">Planta</option><option value="hormiga">Hormiga</option><option value="perfil">Perfil izquierdo</option><option value="perfilDer">Perfil derecho</option></select></label>
+        <label class="fila">Opacidad <input type="range" id="rOpacidad" min="0.05" max="1" step="0.05" value="0.6"></label>
+        <div class="col2">
+          <button id="bBocetoOcultar">👁 Mostrar/ocultar</button>
+          <button id="bBocetoQuitar">✕ Quitar</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h3>Insertar</h3>
+      <div class="col2">
+        <button data-plantilla="cuerpo" title="Laterales, techo, suelo, trasera y estantes">▤ Cuerpo</button>
+        <button data-plantilla="frente" title="Puerta o frentes de cajón apilados">▯ Frente/puerta</button>
+        <button data-plantilla="cajon" title="Caja de cajón completa detrás del frente seleccionado">🗄 Cajón</button>
+        <button data-plantilla="bisagras" title="Bisagras y giro de la puerta seleccionada">🚪 Bisagras</button>
+        <button data-plantilla="patas" title="Cuatro patas bajo el conjunto">╥ 4 patas</button>
+        <button data-plantilla="tirador" title="Tirador en la pieza seleccionada">━ Tirador</button>
+        <button data-plantilla="mano" title="Pieza nueva dibujada a mano en el Calcador, en la vista activa">🖊 Pieza a mano…</button>
+        <button data-plantilla="importar" title="Piezas con contorno desde un DXF o SVG (por ejemplo, del Calcador)">⤓ DXF / SVG…</button>
+        <button id="bMaderas" title="Fotos de madera: añadir, biblioteca y aula">🪵 Maderas…</button>
+      </div>
+    </section>
+
+    <section class="crece">
+      <h3>Piezas <span id="nPiezas" class="cuenta">0</span></h3>
+      <ul id="lista" class="lista"></ul>
+    </section>
+  </aside>
+
+  <!-- ============ VISTAS ============ -->
+  <section class="centro">
+    <div class="vbarra">
+      <button id="bPanelIzq" class="bPanel" title="Ocultar / mostrar el panel izquierdo">◀</button>
+      <div class="grupo">
+        <button data-dist="cuatro" class="activo" title="Alzado, perfil, planta y 3D">▦ Vistas + 3D</button>
+        <button data-dist="tres" title="3D grande">◧ 3D grande</button>
+        <button data-dist="solo3d" title="Solo 3D">■ Solo 3D</button>
+      </div>
+      <div class="grupo">
+        <button id="bEncuadrar" title="Encuadrar todo en todas las vistas (F)">⤢ Encuadrar</button>
+      </div>
+      <div id="estado" class="estado"></div>
+      <button id="bPanelDer" class="bPanel" title="Ocultar / mostrar el panel derecho">▶</button>
+    </div>
+    <div id="vistas" class="vistas cuatro">
+      <div class="vista" data-vista="v1"><div class="vtit"><select class="selVista" title="Elige qué vista se muestra en este panel"></select> <small></small><button class="bGrande" title="Agrandar / restaurar esta vista">⤢</button></div><canvas></canvas></div>
+      <div class="vista" data-vista="v2"><div class="vtit"><select class="selVista" title="Elige qué vista se muestra en este panel"></select> <small></small><button class="bGrande" title="Agrandar / restaurar esta vista">⤢</button></div><canvas></canvas></div>
+      <div class="vista" data-vista="v3"><div class="vtit"><select class="selVista" title="Elige qué vista se muestra en este panel"></select> <small></small><button class="bGrande" title="Agrandar / restaurar esta vista">⤢</button></div><canvas></canvas></div>
+      <div class="vista v3d" id="v3d">
+        <div class="vtit">3D
+          <span class="cams"><button class="bGrande" title="Agrandar / restaurar la vista 3D">⤢</button>
+            <button data-cam="frente">Frente</button><button data-cam="izq">¾ izq</button><button data-cam="der">¾ der</button><button data-cam="arriba">Arriba</button>
+          </span>
+        </div>
+        <canvas id="c3d"></canvas>
+        <div class="mov3d">
+          <label title="Abre las puertas y saca los cajones que tengan movimiento">🚪 Abrir <input type="range" id="rAbrir" min="0" max="1" step="0.01" value="0"></label>
+          <button id="bAnimAbrir" title="Animar apertura">▶</button>
+          <label title="Separa las piezas desde el centro del mueble">💥 Explosión <input type="range" id="rExplosion" min="0" max="1" step="0.01" value="0"></label>
+          <button id="bAnimExpl" title="Animar vista explosionada">▶</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL DERECHO ============ -->
+  <aside class="panel der">
+    <section id="props">
+      <h3 id="tituloSel">Pieza seleccionada</h3>
+      <div id="sinSel" class="nota">Selecciona una pieza en una vista, en el 3D o en la lista. Con <b>Mayús</b> o <b>Ctrl</b> añades más piezas; arrastrando en vacío seleccionas por ventana. Dibuja piezas nuevas con <b>▭ Pieza</b>.</div>
+      <div id="conSel" class="oculto">
+        <label class="fila">Nombre <input type="text" id="pNombre"></label>
+        <label class="fila" id="filaForma">Forma <select id="pForma"><option value="caja">Caja / tablero</option><option value="cilindro">Cilindro</option><option value="perfil">Con contorno</option></select></label>
+        <label class="fila" id="filaEje">Eje del cilindro <select id="pEje"><option value="y">Vertical (Y)</option><option value="x">Ancho (X)</option><option value="z">Fondo (Z)</option></select></label>
+        <div class="col2 contornoBtns">
+          <button id="bCalcador" title="Dibuja o retoca el contorno a mano en el Calcador (rectas, arcos, enlaces, cotas…)">🖊 Calcador…</button>
+          <button id="bContorno" title="Esquinas redondeadas, chaflanes, trapecio, arco, uñero o contorno desde DXF/SVG">✏ Plantilla…</button>
+        </div>
+        <div class="tit-medidas">Posición y medidas (cm)</div>
+        <div class="medidas">
+          <span></span><span>Posición</span><span>Medida</span>
+          <span>X</span><input type="number" id="pX" step="0.1"><input type="number" id="pW" step="0.1" min="0.1" title="Ancho">
+          <span>Y</span><input type="number" id="pY" step="0.1"><input type="number" id="pH" step="0.1" min="0.1" title="Alto">
+          <span>Z</span><input type="number" id="pZ" step="0.1"><input type="number" id="pD" step="0.1" min="0.1" title="Fondo">
+        </div>
+        <label class="fila">Material <select id="pMaterial"></select></label>
+        <label class="fila" id="filaColor">Color <input type="color" id="pColor" value="#ffffff"></label>
+        <label class="fila">Acabado <select id="pAcabado"><option value="mate">Mate</option><option value="satinado">Satinado</option><option value="brillo">Brillo (barniz)</option></select></label>
+        <label class="fila" id="filaVeta">Dirección de la veta <select id="pVeta"><option value="auto">Automática (lado largo)</option><option value="x">Horizontal (X)</option><option value="y">Vertical (Y)</option><option value="z">En profundidad (Z)</option></select></label>
+        <label class="fila">Canto redondeado (mm) <input type="number" id="pCanto" step="0.5" min="0" value="1"></label>
+        <div id="bloqueTablero">
+          <label class="fila">Tablero (alma) <select id="pNucleo">
+            <option value="auto">Automático</option><option value="macizo">Madera maciza</option><option value="aglomerado">Aglomerado</option><option value="mdf">MDF</option><option value="contrachapado">Contrachapado</option></select></label>
+          <label class="fila" id="filaCantos">Cantos <select id="pCantos">
+            <option value="ajuego">A juego (chapa / PVC)</option><option value="sin">Sin canto (se ve el alma)</option><option value="otro">De otro material</option></select></label>
+          <label class="fila" id="filaCantoMat">Material del canto <select id="pCantoMat"></select></label>
+          <label class="fila" id="filaCantoColor">Color del canto <input type="color" id="pCantoColor" value="#222222"></label>
+        </div>
+        <div class="col3">
+          <button id="bDuplicar" title="Duplicar (Ctrl+D)">⧉ Duplicar</button>
+          <button id="bSimetria" title="Copia simétrica respecto al centro del conjunto">⇋ Simetría</button>
+          <button id="bEliminar" class="peligro" title="Eliminar (Supr)">🗑 Eliminar</button>
+          <button id="bAgrupar" title="Agrupar la selección (Ctrl+G)">▣ Agrupar</button>
+          <button id="bDesagrupar" title="Deshacer el grupo (Ctrl+Mayús+G)">▢ Desagrupar</button>
+          <button id="bSerie" title="Repetir la selección en serie">⋯ Repetir…</button>
+        </div>
+        <div id="movSec" class="subsec">
+          <div class="tit-medidas">Movimiento (para abrir y animar)</div>
+          <label class="fila">Tipo <select id="mTipo">
+            <option value="ninguno">Ninguno</option><option value="cajon">Cajón (sale hacia delante)</option>
+            <option value="izq">Puerta, bisagras a la izquierda</option><option value="der">Puerta, bisagras a la derecha</option>
+            <option value="arriba">Abatible, bisagras arriba</option><option value="abajo">Abatible, bisagras abajo</option></select></label>
+          <label class="fila" id="filaMovValor"><span id="mValorEt">Recorrido (cm)</span> <input type="number" id="mValor" step="1" value="30"></label>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h3>Escena y luz</h3>
+      <label class="fila">Escenario <select id="eEscenario">
+        <option value="blanco">Estudio blanco</option>
+        <option value="gris">Estudio gris</option>
+        <option value="oscuro">Estudio oscuro</option>
+        <option value="salon">Salón (parquet y pared)</option>
+      </select></label>
+      <label class="fila">Color de fondo <input type="color" id="eFondo" value="#efeeea"></label>
+      <label class="fila">Luz: giro <input type="range" id="eAzimut" min="-180" max="180" step="1" value="-40"></label>
+      <label class="fila">Luz: altura <input type="range" id="eAltura" min="5" max="89" step="1" value="48"></label>
+      <label class="fila">Suavidad de sombra <input type="range" id="eSuave" min="0" max="1" step="0.05" value="0.55"></label>
+      <label class="fila">Intensidad luz <input type="range" id="eIntens" min="0" max="3" step="0.05" value="1.6"></label>
+      <label class="fila">Luz ambiente <input type="range" id="eAmb" min="0" max="2" step="0.05" value="0.7"></label>
+      <label class="fila">Exposición <input type="range" id="eExpo" min="0.3" max="2.5" step="0.05" value="1"></label>
+      <label class="fila">Objetivo <select id="eLente">
+        <option value="24">24 mm (gran angular)</option><option value="35">35 mm</option>
+        <option value="50" selected>50 mm (normal)</option><option value="85">85 mm (producto)</option><option value="135">135 mm</option>
+      </select></label>
+      <label class="fila" title="Solo en el render final: lo que está más cerca o más lejos que el mueble sale desenfocado">Desenfoque de fondo <select id="eDof">
+        <option value="0">No</option><option value="8">Suave (f/8)</option><option value="4">Medio (f/4)</option>
+        <option value="2.8">Marcado (f/2,8)</option><option value="1.4">Muy marcado (f/1,4)</option>
+      </select></label>
+    </section>
+  </aside>
+</main>
+
+<!-- referencia flotante -->
+<div id="flotante" class="flotante oculto">
+  <div class="ftit"><span>Referencia</span><button id="bFlotCerrar">✕</button></div>
+  <img id="flotImg" alt="Boceto de referencia">
+</div>
+
+<!-- modal genérico -->
+<div id="modal" class="modal oculto"><div class="caja">
+  <div class="mtit"><span id="mTitulo"></span><button id="mCerrar">✕</button></div>
+  <div id="mCuerpo" class="mcuerpo"></div>
+  <div id="mPie" class="mpie"></div>
+</div></div>
+
+<!-- Calcador en una ventana -->
+<div id="calcVentana" class="calcVentana oculto">
+  <div class="calcMarco">
+    <div id="calcCaja" class="calcCaja"></div>
+    <button id="calcCerrar" class="calcCerrar" title="Cerrar sin cambiar la pieza">✕</button>
+    <div id="calcAviso" class="calcAviso oculto">El Calcador no responde. Comprueba que está el archivo <b>assets/calcador/calcador.html</b> en la carpeta del programa.</div>
+  </div>
+</div>
+
+<input type="file" id="fArchivo" class="oculto">
+<div id="aviso" class="aviso"></div>
+
+<script src="assets/js/three-bundle.js"></script>
+<script src="assets/texturas/texturas.js"></script>
+<script src="assets/texturas/maderas_aula.js"></script>
+<script src="assets/ejemplos/mesita.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

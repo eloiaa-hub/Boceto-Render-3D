@@ -1,0 +1,28 @@
+BOCETO A RENDER 3D — Por Eloi A.A.   (versión 3.3)
+
+Abre con doble clic: Boceto_Render3D.html  (Chrome, Edge o Firefox; no necesita internet)
+Manual: ayuda/manual.html y ayuda/manual.pdf
+
+Copia siempre la carpeta completa:
+  assets/js        programa (app.js) y Three.js empaquetado sin módulos
+  assets/css       estilos
+  assets/texturas  maderas y almas de tablero (texturas.js; los .jpg son solo para verlas)
+                   maderas_aula.js: maderas de fotos para todos los ordenadores
+                   (se genera desde 🪵 Maderas… → Exportar para el aula)
+  assets/ejemplos  mesita de ejemplo
+  assets/calcador  copia del Calcador de contornos (v130 + modo «Pieza 3D»), para dibujar piezas a mano
+  ayuda/           manual
+
+Novedades v2: selección múltiple y por ventana, grupos, repetir en serie, piezas con contorno
+(plantillas e importación DXF/SVG), cajón completo, bisagras, abrir puertas y cajones, vista
+explosionada, tablero (alma) y cantos, desenfoque de fondo y maderas desde fotos con biblioteca.
+
+Novedades v3: elegir la vista de cada panel 2D (alzado, posterior, planta, hormiga, perfil izq./der.)
+y agrandarla; lámina técnica acotada con cajetín en PDF y DXF; despiece para el Anidador (.zip).
+v3.1: las ventanas emergentes se arrastran por su título.
+v3.2: número de versión junto al nombre; apartados de los paneles plegables (▾/▸) y paneles
+izquierdo y derecho ocultables (◀ ▶).
+v3.3: dibujar o retocar el contorno de una pieza en el Calcador (ventana integrada, con el boceto de
+fondo); los arcos llegan exactos al 3D, a la lámina y al Anidador.
+
+Licencias: programa EUPL-1.2 · manual CC BY-SA 4.0 · Three.js MIT
