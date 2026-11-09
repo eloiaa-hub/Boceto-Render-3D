@@ -2977,6 +2977,14 @@ function redimensionar() { Object.values(VISTAS).forEach(ajustarTam); dibujarVis
 new ResizeObserver(redimensionar).observe($('#vistas'));
 window.addEventListener('resize', redimensionar);
 
+/* ---------- barra superior compacta: en pantallas estrechas los botones se quedan en su icono (el nombre sigue en la ayuda emergente) ---------- */
+$$('.barra .grupo button').forEach(b => {
+  const t = b.textContent.trim(), i = t.indexOf(' '); if (i < 1) return;
+  const ico = t.slice(0, i), txt = t.slice(i + 1);
+  b.innerHTML = ''; b.append(ico); const s = document.createElement('span'); s.className = 'txt'; s.textContent = ' ' + txt; b.append(s);
+  if (!b.title) b.title = txt;
+});
+
 /* ---------- apartados plegables y paneles ocultables ---------- */
 (function () {
   let est = {}; try { est = JSON.parse(localStorage.getItem('boceto3d.plegados') || '{}'); } catch (e) {}

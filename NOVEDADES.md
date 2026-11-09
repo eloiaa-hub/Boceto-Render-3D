@@ -3,6 +3,8 @@
 ## v3.4
 - ▱ **MUEBLECAD 2D**: el mueble pasa a un plano de taller con dos láminas A3: vistas de conjunto (alzado, planta y perfil, con aristas ocultas y apertura de puertas) y las piezas desplegadas como piezas de tablero (material, alma, grueso, veta, cantos y contorno), listas para añadir herrajes y taladros, acotar y sacar el despiece.
 - 📋 Despiece → **Para MUEBLECAD (.json)**: el mismo envío en un archivo, por si el navegador bloquea la pestaña nueva.
+- En pantallas estrechas, los botones de la barra superior se quedan solo con su icono (el nombre aparece al pasar el ratón), para que no se salgan de la barra.
+- El apartado «Piezas» del panel izquierdo ya se pliega con su triángulo.
 - 🖊 Los contornos se dibujan ahora en **MUEBLECAD 2D** (modo «Pieza 3D»), en lugar del Calcador: mismo funcionamiento y mismos datos, con elipses, splines, booleanas y simplificación de curvas.
 
 ## v3.3

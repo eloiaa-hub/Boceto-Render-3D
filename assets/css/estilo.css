@@ -176,3 +176,13 @@ input:disabled,select:disabled{opacity:.55}
 .calcCerrar{position:absolute;right:8px;top:8px;z-index:2;padding:2px 9px;opacity:.85}
 .calcAviso{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--borde);padding:16px 20px;border-radius:8px;box-shadow:var(--sombra);max-width:440px;text-align:center}
 .contornoBtns{margin:6px 0 2px}
+
+/* ---- v3.4: barra compacta en pantallas estrechas y «Piezas» plegable ---- */
+.panel section.crece.plegada > .sec-cuerpo{display:none}
+.barra{flex-wrap:nowrap;min-width:0}
+.barra .marca{min-width:0;white-space:nowrap}
+.barra .grupo{flex-wrap:nowrap;min-width:0}
+.barra button{white-space:nowrap}
+@media (max-width:1500px){ .barra .autor{display:none} }
+@media (max-width:1380px){ .barra button .txt{display:none} .barra button{padding-left:8px;padding-right:8px} .barra button.primario .txt,.barra #bMueblecad .txt{display:inline} }
+@media (max-width:1000px){ .barra button.primario .txt,.barra #bMueblecad .txt{display:none} .barra .marca b{display:none} }
