@@ -1,5 +1,10 @@
 # Novedades de Boceto a Render 3D
 
+## v3.4
+- ▱ **MUEBLECAD 2D**: el mueble pasa a un plano de taller con dos láminas A3: vistas de conjunto (alzado, planta y perfil, con aristas ocultas y apertura de puertas) y las piezas desplegadas como piezas de tablero (material, alma, grueso, veta, cantos y contorno), listas para añadir herrajes y taladros, acotar y sacar el despiece.
+- 📋 Despiece → **Para MUEBLECAD (.json)**: el mismo envío en un archivo, por si el navegador bloquea la pestaña nueva.
+- 🖊 Los contornos se dibujan ahora en **MUEBLECAD 2D** (modo «Pieza 3D»), en lugar del Calcador: mismo funcionamiento y mismos datos, con elipses, splines, booleanas y simplificación de curvas.
+
 ## v3.3
 - 🖊 **Calcador** en una ventana dentro del programa (modo «Pieza 3D»): dibujar o retocar el contorno de una pieza con rectas, arcos y cotas, con el boceto de fondo. Los arcos llegan exactos al 3D, a la lámina y al Anidador.
 - 🖊 **Pieza a mano…**: pieza nueva dibujada en el Calcador.

@@ -10,7 +10,7 @@
 <header class="barra">
   <div class="marca">
     <span class="logo">◩</span>
-    <div><b>Boceto a Render 3D</b> <span class="version" id="version" title="Versión del programa">v3.3</span> <span class="autor">— Por Eloi A.A.</span></div>
+    <div><b>Boceto a Render 3D</b> <span class="version" id="version" title="Versión del programa">v3.4</span> <span class="autor">— Por Eloi A.A.</span></div>
   </div>
   <div class="grupo">
     <button id="bNuevo" title="Proyecto nuevo">🗋 Nuevo</button>
@@ -23,6 +23,7 @@
     <span class="sep"></span>
     <button id="bDespiece" title="Despiece para hoja de cálculo o para el Anidador">📋 Despiece</button>
     <button id="bLamina" title="Lámina técnica con vistas acotadas (PDF o DXF)">📐 Lámina</button>
+    <button id="bMueblecad" title="Plano de taller en MUEBLECAD 2D: vistas, piezas desplegadas, herrajes, cotas y despiece">▱ MUEBLECAD</button>
     <button id="bRender" class="primario" title="Generar la imagen final">📷 Render</button>
     <span class="sep"></span>
     <button id="bTema" title="Modo claro / oscuro">🌓</button>
@@ -84,7 +85,7 @@
         <button data-plantilla="bisagras" title="Bisagras y giro de la puerta seleccionada">🚪 Bisagras</button>
         <button data-plantilla="patas" title="Cuatro patas bajo el conjunto">╥ 4 patas</button>
         <button data-plantilla="tirador" title="Tirador en la pieza seleccionada">━ Tirador</button>
-        <button data-plantilla="mano" title="Pieza nueva dibujada a mano en el Calcador, en la vista activa">🖊 Pieza a mano…</button>
+        <button data-plantilla="mano" title="Pieza nueva dibujada a mano en MUEBLECAD 2D, en la vista activa">🖊 Pieza a mano…</button>
         <button data-plantilla="importar" title="Piezas con contorno desde un DXF o SVG (por ejemplo, del Calcador)">⤓ DXF / SVG…</button>
         <button id="bMaderas" title="Fotos de madera: añadir, biblioteca y aula">🪵 Maderas…</button>
       </div>
@@ -142,7 +143,7 @@
         <label class="fila" id="filaForma">Forma <select id="pForma"><option value="caja">Caja / tablero</option><option value="cilindro">Cilindro</option><option value="perfil">Con contorno</option></select></label>
         <label class="fila" id="filaEje">Eje del cilindro <select id="pEje"><option value="y">Vertical (Y)</option><option value="x">Ancho (X)</option><option value="z">Fondo (Z)</option></select></label>
         <div class="col2 contornoBtns">
-          <button id="bCalcador" title="Dibuja o retoca el contorno a mano en el Calcador (rectas, arcos, enlaces, cotas…)">🖊 Calcador…</button>
+          <button id="bCalcador" title="Dibuja o retoca el contorno a mano en MUEBLECAD 2D (rectas, arcos, empalmes, cotas…)">🖊 Dibujar…</button>
           <button id="bContorno" title="Esquinas redondeadas, chaflanes, trapecio, arco, uñero o contorno desde DXF/SVG">✏ Plantilla…</button>
         </div>
         <div class="tit-medidas">Posición y medidas (cm)</div>
@@ -224,12 +225,12 @@
   <div id="mPie" class="mpie"></div>
 </div></div>
 
-<!-- Calcador en una ventana -->
+<!-- MUEBLECAD 2D en una ventana, para dibujar contornos -->
 <div id="calcVentana" class="calcVentana oculto">
   <div class="calcMarco">
     <div id="calcCaja" class="calcCaja"></div>
     <button id="calcCerrar" class="calcCerrar" title="Cerrar sin cambiar la pieza">✕</button>
-    <div id="calcAviso" class="calcAviso oculto">El Calcador no responde. Comprueba que está el archivo <b>assets/calcador/calcador.html</b> en la carpeta del programa.</div>
+    <div id="calcAviso" class="calcAviso oculto">MUEBLECAD 2D no responde. Comprueba que está el archivo <b>assets/mueblecad/mueblecad.html</b> en la carpeta del programa.</div>
   </div>
 </div>
 

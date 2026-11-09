@@ -1,4 +1,4 @@
-BOCETO A RENDER 3D — Por Eloi A.A.   (versión 3.3)
+BOCETO A RENDER 3D — Por Eloi A.A.   (versión 3.4)
 
 Abre con doble clic: Boceto_Render3D.html  (Chrome, Edge o Firefox; no necesita internet)
 Manual: ayuda/manual.html y ayuda/manual.pdf
@@ -10,7 +10,9 @@ Copia siempre la carpeta completa:
                    maderas_aula.js: maderas de fotos para todos los ordenadores
                    (se genera desde 🪵 Maderas… → Exportar para el aula)
   assets/ejemplos  mesita de ejemplo
-  assets/calcador  copia del Calcador de contornos (v130 + modo «Pieza 3D»), para dibujar piezas a mano
+  assets/mueblecad copia de MUEBLECAD 2D: dibujar contornos de piezas (modo «Pieza 3D») y plano de taller
+                   del mueble (botón ▱ MUEBLECAD), con su manual
+  assets/calcador  copia del Calcador de contornos (v130); ya no se usa desde la v3.4, se puede borrar
   ayuda/           manual
 
 Novedades v2: selección múltiple y por ventana, grupos, repetir en serie, piezas con contorno
@@ -22,6 +24,8 @@ y agrandarla; lámina técnica acotada con cajetín en PDF y DXF; despiece para 
 v3.1: las ventanas emergentes se arrastran por su título.
 v3.2: número de versión junto al nombre; apartados de los paneles plegables (▾/▸) y paneles
 izquierdo y derecho ocultables (◀ ▶).
+v3.4: ▱ MUEBLECAD 2D: plano de taller del mueble (vistas y piezas desplegadas para herrajes, cotas y
+despiece); los contornos se dibujan en MUEBLECAD en lugar del Calcador.
 v3.3: dibujar o retocar el contorno de una pieza en el Calcador (ventana integrada, con el boceto de
 fondo); los arcos llegan exactos al 3D, a la lámina y al Anidador.
 

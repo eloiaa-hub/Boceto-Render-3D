@@ -45,7 +45,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 
 <header class="port">
   <h1>Boceto a Render 3D</h1>
-  <p>Manual de uso · versión 3.3 · De un boceto a mano a una imagen realista del mueble, sin internet · Por Eloi A.A.</p>
+  <p>Manual de uso · versión 3.4 · De un boceto a mano a una imagen realista del mueble, sin internet · Por Eloi A.A.</p>
 </header>
 
 <div class="ind">
@@ -63,10 +63,11 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
   <a href="#escena">12. Paso 4 · Escena y luz</a><br>
   <a href="#render">13. Paso 5 · El render</a><br>
   <a href="#lamina">14. Lámina técnica (PDF y DXF)</a><br>
-  <a href="#archivos">15. Guardar, abrir, despiece y Anidador</a><br>
-  <a href="#teclas">16. Atajos de teclado</a><br>
-  <a href="#consejos">17. Consejos para que parezca una foto</a><br>
-  <a href="#limites">18. Limitaciones</a>
+  <a href="#mueblecad">15. Plano de taller en MUEBLECAD 2D</a><br>
+  <a href="#archivos">16. Guardar, abrir, despiece y Anidador</a><br>
+  <a href="#teclas">17. Atajos de teclado</a><br>
+  <a href="#consejos">18. Consejos para que parezca una foto</a><br>
+  <a href="#limites">19. Limitaciones</a>
 </div>
 
 <h2 id="que">1. Qué es</h2>
@@ -175,7 +176,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
   <tr><td>🚪 Bisagras</td><td>Bisagras y giro de la puerta seleccionada (apartado 9).</td></tr>
   <tr><td>╥ 4 patas</td><td>Cuatro patas cuadradas, redondas o afiladas, agrupadas. Puede subir el mueble para que apoye en ellas.</td></tr>
   <tr><td>━ Tirador</td><td>Un tirador centrado, arriba, abajo o a un lado del frente seleccionado. Entra en el grupo del frente.</td></tr>
-  <tr><td>🖊 Pieza a mano…</td><td>Una pieza nueva dibujada en el Calcador (apartado 8).</td></tr>
+  <tr><td>🖊 Pieza a mano…</td><td>Una pieza nueva dibujada en MUEBLECAD 2D (apartado 8).</td></tr>
   <tr><td>⤓ DXF / SVG…</td><td>Piezas con contorno desde un dibujo (apartado 8).</td></tr>
   <tr><td>🪵 Maderas…</td><td>Fotos de madera, biblioteca y maderas del aula (apartado 11).</td></tr>
 </table>
@@ -215,20 +216,20 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
   </div>
   <img src="img/contorno.png" alt="Diálogo de contorno">
 </div>
-<h3>Dibujar a mano en el Calcador</h3>
-<p>El programa trae su propia copia del <b>Calcador de contornos</b> (en <code>assets/calcador/</code>), que se abre en una ventana grande en modo <b>«Pieza 3D»</b>: solo dibujo y cotas, sin G-code ni mecanizado. Ahí tienes todas sus herramientas: rectas, arcos (por 3 puntos, tangentes), círculos, ranuras, polígonos, enlaces y chaflanes, recortar, alargar, equidistantes, cotas, coordenadas escritas…</p>
+<h3>Dibujar a mano en MUEBLECAD 2D</h3>
+<p>El programa trae su propia copia de <b>MUEBLECAD 2D</b> (en <code>assets/mueblecad/</code>), que se abre en una ventana grande en modo <b>«Pieza 3D»</b>. Ahí tienes sus herramientas de dibujo: rectas, polilíneas con arcos, círculos, elipses, splines, empalmes y chaflanes, recortar, alargar, equidistantes, operaciones booleanas, cotas, medidas escritas junto al cursor…</p>
 <ul>
-  <li><b>🖊 Calcador…</b> (en el panel de la pieza) abre la pieza seleccionada en la vista donde está su contorno o, si es una caja, en la vista que la muestra de frente (la de su cara grande). Llega como un rectángulo con sus medidas en mm, o con el contorno que ya tenía para retocarlo.</li>
+  <li><b>🖊 Dibujar…</b> (en el panel de la pieza) abre la pieza seleccionada en la vista donde está su contorno o, si es una caja, en la vista que la muestra de frente (la de su cara grande). Llega como un rectángulo con sus medidas en mm, o con el contorno que ya tenía para retocarlo.</li>
   <li><b>🖊 Pieza a mano…</b> (en Insertar) crea una pieza nueva dibujada desde cero, en la vista activa y con el grosor de tablero indicado.</li>
-  <li>Si esa vista tiene un <b>boceto de fondo</b>, aparece en el Calcador en su sitio y a su escala, listo para calcarlo.</li>
-  <li>Al pulsar <b>«✓ Usar en la pieza»</b>, el contorno mayor es la pieza y los que quedan dentro, sus huecos. Otros contornos sueltos se convierten en piezas nuevas, en su posición. La pieza toma las medidas del dibujo; la esquina del rectángulo inicial (el 0,0) sigue en su sitio. <b>«✕ Cancelar»</b> o ✕ cierran sin cambiar nada.</li>
-  <li>El dibujo se guarda con la pieza, con sus <b>arcos exactos</b>: al volver a abrirlo sigue igual, y el despiece para el Anidador lleva esos arcos (no polilíneas), mientras la pieza no se haya estirado en una sola dirección.</li>
+  <li>Si esa vista tiene un <b>boceto de fondo</b>, aparece en su sitio y a su escala, listo para calcarlo.</li>
+  <li>Al pulsar <b>«✓ Usar en la pieza»</b>, el contorno cerrado mayor es la pieza y los que quedan dentro, sus huecos. Otros contornos sueltos se convierten en piezas nuevas, en su posición. La pieza toma las medidas del dibujo; la esquina del rectángulo inicial (el 0,0) sigue en su sitio. <b>«✕ Cancelar»</b> o ✕ cierran sin cambiar nada.</li>
+  <li>El dibujo se guarda con la pieza, con sus <b>arcos exactos</b>: al volver a abrirlo sigue igual, y el despiece para el Anidador lleva esos arcos (no polilíneas), mientras la pieza no se haya estirado en una sola dirección. Las elipses y splines se pasan como tramos rectos: si quieres arcos, usa antes <b>Simplificar curvas</b>.</li>
 </ul>
 <div class="dos">
-  <figure><img src="img/calcador.png" alt="Calcador en modo Pieza 3D"><figcaption>El lateral derecho abierto en el Calcador.</figcaption></figure>
+  <figure><img src="img/mueblecad_pieza.png" alt="MUEBLECAD 2D en modo Pieza 3D"><figcaption>El lateral izquierdo abierto en MUEBLECAD, con el borde inferior en arco.</figcaption></figure>
   <figure><img src="img/calcador_aplicado.png" alt="Contorno aplicado"><figcaption>De vuelta en el 3D: frente en arco y agujero pasante.</figcaption></figure>
 </div>
-<div class="caja">El Calcador funciona dentro de la ventana igual que solo. Sus cambios no tocan el trabajo guardado del Calcador normal (en este modo no hay autoguardado). Si la ventana se queda en blanco, comprueba que está el archivo <code>assets/calcador/calcador.html</code>.</div>
+<div class="caja">Un contorno cerrado se cierra con el botón derecho → <b>Cerrar</b>, o haciendo clic en su primer punto. En este modo no hay autoguardado ni se toca el trabajo del MUEBLECAD normal. Si la ventana se queda en blanco, comprueba que está el archivo <code>assets/mueblecad/mueblecad.html</code>.</div>
 <h3>Importar DXF o SVG (por ejemplo, desde el Calcador)</h3>
 <div class="dos">
   <img src="img/importar.png" alt="Importar DXF">
@@ -359,11 +360,33 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 </div>
 <div class="caja">Las aristas ocultas se calculan por piezas: una arista queda oculta si hay otra pieza más cerca del observador que la tapa. Los huecos de las piezas con contorno no dejan ver lo que hay detrás.</div>
 
-<h2 id="archivos">15. Guardar, abrir, despiece y Anidador</h2>
+<h2 id="mueblecad">15. Plano de taller en MUEBLECAD 2D</h2>
+<p><b>▱ MUEBLECAD</b> (barra superior) abre el mueble en <b>MUEBLECAD 2D</b>, el programa de dibujo técnico para muebles que va dentro de la carpeta (<code>assets/mueblecad/</code>). Se abre en otra pestaña, con dos láminas A3 ya preparadas:</p>
+<ul>
+  <li><b>Conjunto</b>: alzado, planta y perfil izquierdo en sistema europeo, con las aristas ocultas en discontinua, el nombre de cada vista y la apertura de las puertas que tengan movimiento. La escala normalizada (1:5, 1:10, 1:20…) se elige sola.</li>
+  <li><b>Piezas</b>: cada tablero desplegado por su cara, como <b>pieza de tablero</b> con su nombre, material, grueso, veta y cantos, y la lista de piezas, que se actualiza sola. Las piezas iguales (mismo nombre, material y medidas) van juntas, con su cantidad.</li>
+</ul>
+<p>En MUEBLECAD se añaden los <b>herrajes y taladros</b> (sistema 32, bisagras, Minifix, galletas…), se acota, se comprueba y se saca el <b>despiece</b> (también en CSV para el Anidador) y el PDF a escala.</p>
+<div class="dos">
+  <figure><img src="img/mueblecad_vistas.png" alt="Vistas del mueble en MUEBLECAD"><figcaption>La mesita de ejemplo: vistas de conjunto.</figcaption></figure>
+  <figure><img src="img/mueblecad_piezas.png" alt="Piezas desplegadas en MUEBLECAD"><figcaption>Las piezas desplegadas y la lista de piezas.</figcaption></figure>
+</div>
+<table>
+  <tr><th>De Boceto</th><th>En MUEBLECAD</th></tr>
+  <tr><td>Material y alma</td><td>Un material por combinación, por ejemplo «Roble · aglomerado» (rayado de aglomerado) o «Roble macizo». Se añade a su biblioteca con el grueso.</td></tr>
+  <tr><td>Veta</td><td>Las maderas llevan veta: el largo de la pieza va en su dirección.</td></tr>
+  <tr><td>Cantos</td><td>Los tableros con alma y canto («a juego» u «otro») llevan canto de 1 mm en todo el contorno; se cambia lado a lado en MUEBLECAD. La madera maciza, sin canto.</td></tr>
+  <tr><td>Contorno</td><td>Las piezas con contorno se despliegan con él y sus huecos, con los arcos exactos si se dibujó a mano.</td></tr>
+  <tr><td>Cristal</td><td>Material «Vidrio», sin veta ni canto.</td></tr>
+</table>
+<div class="caja">No pasan a MUEBLECAD los metales (tiradores, guías) ni las piezas cilíndricas: se avisa de cuáles son. Es una <b>copia</b>: si cambias el mueble en Boceto, vuelve a enviarlo (lo que añadiste en MUEBLECAD no se conserva). Si el navegador bloquea la pestaña nueva, <b>📋 Despiece → Para MUEBLECAD</b> guarda el mueble en un archivo que se abre en MUEBLECAD con «📂 Abrir».</div>
+
+<h2 id="archivos">16. Guardar, abrir, despiece y Anidador</h2>
 <ul>
   <li><b>💾 Guardar</b> descarga un archivo <code>.boceto3d.json</code> con todo: piezas, grupos y movimientos, contornos, bocetos, maderas de fotos, escena y cámara. <b>📂 Abrir</b> lo recupera (también los proyectos de la versión anterior).</li>
   <li>El programa se <b>autoguarda</b> en el navegador. Si el proyecto lleva imágenes muy grandes puede que no quepa, y lo avisa: en ese caso usa Guardar.</li>
   <li><b>📋 Despiece → Hoja de cálculo</b> descarga un <code>.csv</code> (LibreOffice Calc o Excel) con nombre, largo, ancho, grosor, material, observaciones (contorno, tipo de tablero y canto), grupo y cantidad. Las piezas iguales se agrupan.</li>
+  <li><b>📋 Despiece → Para MUEBLECAD</b> guarda el mueble en un <code>.json</code> para abrirlo en MUEBLECAD 2D (apartado 15).</li>
   <li><b>📋 Despiece → Para el Anidador</b> descarga un <code>.zip</code> preparado para el <b>Anidador de tableros</b> de la Suite CNC (abajo).</li>
   <li><b>🪑 Ejemplo</b> carga la mesita de noche con dos cajones completos para practicar.</li>
 </ul>
@@ -378,7 +401,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 </ul>
 <figure><img src="img/anidador.png" alt="Piezas abiertas en el Anidador"><figcaption>El .csv de «Roble 19 mm» y la tapa con esquinas redondeadas abiertos en el Anidador. Solo falta poner las medidas del tablero.</figcaption></figure>
 
-<h2 id="teclas">16. Atajos de teclado</h2>
+<h2 id="teclas">17. Atajos de teclado</h2>
 <table>
   <tr><th>Tecla</th><th>Acción</th><th>Tecla</th><th>Acción</th></tr>
   <tr><td><kbd>V</kbd></td><td>Seleccionar</td><td><kbd>R</kbd></td><td>Dibujar pieza</td></tr>
@@ -392,7 +415,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
   <tr><td><kbd>Espacio</kbd> + arrastrar</td><td>Desplazar la vista</td><td><kbd>Esc</kbd></td><td>Quitar selección</td></tr>
 </table>
 
-<h2 id="consejos">17. Consejos para que parezca una foto</h2>
+<h2 id="consejos">18. Consejos para que parezca una foto</h2>
 <ul>
   <li><b>Construye como en el taller</b>: tableros separados, juntas de 2–3 mm entre frentes, cajones con su caja.</li>
   <li><b>Redondea los cantos</b> 1–2 mm y elige bien el tablero y el canto: un aglomerado con el alma a la vista o un canto de otro color delatan enseguida si el render es creíble.</li>
@@ -401,7 +424,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
   <li><b>Calidad alta</b> para la imagen definitiva; borrador para probar.</li>
 </ul>
 
-<h2 id="limites">18. Limitaciones</h2>
+<h2 id="limites">19. Limitaciones</h2>
 <ul>
   <li>No interpreta solo un boceto en perspectiva: las piezas se dibujan en las vistas, usando el boceto como guía.</li>
   <li>Las piezas van alineadas con los ejes: no hay piezas giradas en el modelo (solo al abrir puertas). Los contornos son extrusiones rectas: no hay molduras, tallas ni tapizados.</li>

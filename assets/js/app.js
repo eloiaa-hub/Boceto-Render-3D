@@ -8,7 +8,7 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const T = window.THREE;
 const CLAVE_LS = 'boceto3d.proyecto';
-const VERSION = '3.3';
+const VERSION = '3.4';
 
 /* ===================== MATERIALES ===================== */
 const MATERIALES = {
@@ -1202,12 +1202,12 @@ function abrirContorno() {
   let importado = null;
   const tipos = [['rect', 'Rectángulo (sin contorno)'], ['redondeado', 'Esquinas redondeadas'], ['chaflan', 'Esquinas achaflanadas'], ['trapecio', 'Trapecio (pata afilada, lateral inclinado)'], ['arco', 'Lado superior en arco'], ['unero', 'Uñero (tirador mecanizado arriba)'], ['importar', 'Desde un DXF o SVG…']];
   const plano0 = p.plano || planoNatural(p);
-  if (tieneContorno(p) && p.contorno.tipo === 'calcador') tipos.splice(1, 0, ['calcador', 'Dibujado en el Calcador (sin cambios)']);
+  if (tieneContorno(p) && p.contorno.tipo === 'calcador') tipos.splice(1, 0, ['calcador', 'Dibujado a mano (sin cambios)']);
   modal('Contorno de «' + p.nombre + '»', formulario([
     { id: 'plano', et: 'Se dibuja en la vista', v: plano0, sel: [['alzado', 'Alzado (grosor en Z)'], ['planta', 'Planta (grosor en Y)'], ['perfil', 'Perfil (grosor en X)']] },
     { id: 'tipo', et: 'Forma', v: p.contorno && p.contorno.tipo || (tieneContorno(p) ? 'importar' : 'redondeado'), sel: tipos }]) +
     `<div id="cParams"></div><canvas id="cPrev" class="prevc" width="440" height="220"></canvas>
-     <p class="nota">Para dibujarlo a mano, con rectas, arcos y cotas, usa <b>🖊 Calcador…</b>. El contorno se estira con la pieza si luego cambias sus medidas. El grosor (3.ª medida) se extruye. Los cantos se redondean con «Canto redondeado».</p>`, [
+     <p class="nota">Para dibujarlo a mano, con rectas, arcos y cotas, usa <b>🖊 Dibujar…</b> (MUEBLECAD 2D). El contorno se estira con la pieza si luego cambias sus medidas. El grosor (3.ª medida) se extruye. Los cantos se redondean con «Canto redondeado».</p>`, [
     { txt: 'Cancelar' },
     { txt: 'Aplicar', primario: true, fn: () => {
       const t = fv('tipo'), plano = fv('plano'), cont = calcular();
@@ -1555,7 +1555,7 @@ $('#bFlotCerrar').onclick = () => $('#flotante').classList.add('oculto');
    Se le manda la pieza (medidas en mm de la vista donde se dibuja), su contorno si ya lo tiene y el boceto de esa vista;
    devuelve sus contornos con los arcos exactos (pts + bulge). El mayor es la pieza; los de dentro, sus huecos;
    otros contornos sueltos se convierten en piezas nuevas. */
-const CALC_URL = 'assets/calcador/calcador.html?modo=pieza3d';
+const CALC_URL = 'assets/mueblecad/mueblecad.html?modo=pieza3d';
 let calcSesion = null;
 
 function calcPoligonos(calc) { // contornos cerrados del Calcador → polígonos en mm (y hacia arriba)
@@ -1586,7 +1586,7 @@ function abrirCalcador(p, plano, nueva) {
   calcSesion = { pid: p.id, nueva: !!nueva, plano, base: nueva ? p : null, off, enviado: false,
     datos: { tipo: 'pieza3d-datos', nombre: p.nombre, vista: T0.nombre, ancho, alto, calcador: calc, fondo: bocetoParaCalc(p, plano) } };
   const v = $('#calcVentana'); v.classList.remove('oculto');
-  const f = document.createElement('iframe'); f.id = 'calcFrame'; f.src = CALC_URL; f.title = 'Calcador';
+  const f = document.createElement('iframe'); f.id = 'calcFrame'; f.src = CALC_URL; f.title = 'MUEBLECAD 2D';
   $('#calcCaja').innerHTML = ''; $('#calcCaja').appendChild(f);
   setTimeout(() => { if (calcSesion && !calcSesion.enviado) $('#calcAviso').classList.remove('oculto'); }, 6000);
 }
@@ -1637,7 +1637,7 @@ function aplicarCalc(s, calc, nombre) {
   if (nombre && s.nueva && nombre !== 'Pieza a mano') p.nombre = nombre;
   sel = new Set(nuevas.map(q => q.id)); cambio(true);
   if (s.nueva) encuadrarTodo();
-  aviso(nuevas.length > 1 ? `Contorno aplicado; ${nuevas.length - 1} contorno(s) más, como piezas nuevas` : 'Contorno del Calcador aplicado');
+  aviso(nuevas.length > 1 ? `Contorno aplicado; ${nuevas.length - 1} contorno(s) más, como piezas nuevas` : 'Contorno aplicado');
 }
 
 // Calcador → Anidador: los contornos con sus arcos, escalados a las medidas actuales de la pieza
@@ -1665,7 +1665,7 @@ function piezaAMano() {
   o[DIM[T0.h]] = 40; o[DIM[T0.v]] = 30; o[DIM[T0.prof]] = g;
   o[T0.h] = hay ? r1((T0.h === 'x' ? bb.x1 : bb.z1) + 10) : 0; o[T0.v] = 0; o[T0.prof] = 0;
   abrirCalcador(nuevaPieza(o), plano, true);
-  aviso('Dibuja la pieza en el Calcador (vista ' + T0.nombre.toLowerCase() + ')');
+  aviso('Dibuja la pieza en MUEBLECAD 2D (vista ' + T0.nombre.toLowerCase() + ')');
 }
 
 /* ===================== MADERAS DESDE FOTOS ===================== */
@@ -2778,6 +2778,71 @@ function exportarAnidador() {
   aviso(`${archivos.length - 1} archivo(s) para el Anidador`);
 }
 
+/* ===================== MUEBLECAD 2D: PLANO DE TALLER ===================== */
+/* Se manda el mueble a MUEBLECAD 2D (assets/mueblecad/mueblecad.html): las vistas con aristas visibles y ocultas
+   (en mm, Y hacia arriba) y cada pieza de tablero con su material, alma, grueso, veta, cantos y contorno.
+   MUEBLECAD crea una lámina de conjunto y otra con las piezas desplegadas, listas para herrajes, cotas y despiece. */
+const MC_URL = 'assets/mueblecad/mueblecad.html';
+const PAT_ALMA = { macizo: 'MACIZO', aglomerado: 'AGLOMERADO', mdf: 'MDF', contrachapado: 'CONTRACHAPADO' };
+function paqueteMueblecad() {
+  const mm = v => Math.round(v * 10000) / 1000;
+  const vistas = {};
+  ['alzado', 'planta', 'perfil'].forEach(t => {
+    const T = TIPOS[t], ar = aristasVista(T), mp = ([a, b]) => [mm(T.hs > 0 ? a : -a), mm(T.vs > 0 ? b : -b)];
+    vistas[t] = { nombre: T.nombre, vis: ar.vis.map(s => s.map(mp)), ocu: ar.ocu.map(s => s.map(mp)) };
+  });
+  const piezas = [], fuera = [];
+  for (const p of P.piezas) {
+    if (!p.visible) continue;
+    const m = infoMaterial(p.material);
+    if (['metal', 'metalpint'].includes(m.tipo) || p.forma === 'cilindro') { fuera.push(p.nombre); continue; }
+    const cristal = m.tipo === 'cristal', nuc = nucleoDe(p), md = medidasTablero(p);
+    const base = m.tipo === 'lacado' ? 'Lacado ' + p.color : m.nombre;
+    const mat = { n: cristal ? 'Vidrio' : base + (nuc === 'macizo' ? ' macizo' : ' · ' + ALMAS[nuc].nombre.toLowerCase()), pat: cristal ? 'VIDRIO' : PAT_ALMA[nuc] || 'AGLOMERADO', veta: md.veta && !cristal };
+    const canto = !cristal && nuc !== 'macizo' && p.cantos !== 'sin' ? 1 : 0;
+    let conts = null, girar = false;
+    if (tieneContorno(p) && TIPOS[p.plano].prof === ejeGrosor(p)) {
+      const Tp = TIPOS[p.plano], c = p.contorno, ka = p[DIM[Tp.h]] / c.cw * 10, kb = p[DIM[Tp.v]] / c.ch * 10;
+      const conv = an => ({ pts: an.map(([u, v]) => ({ x: Math.round(u * ka * 1000) / 1000, y: Math.round(v * kb * 1000) / 1000 })), b: an.map(() => 0) });
+      conts = contornosCalcadorMM(p) || [conv(c.ext), ...(c.huecos || []).map(conv)];
+      girar = md.ejeL !== Tp.h;
+    }
+    const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
+    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, conts, girar });
+  }
+  const aperturas = [];
+  for (const [g, G] of Object.entries(P.grupos)) {
+    if (!G.mov || !['izq', 'der', 'arriba', 'abajo'].includes(G.mov.tipo)) continue;
+    const L = piezasGrupo(g).filter(p => p.visible); if (!L.length) continue;
+    const b = bbox(L); aperturas.push({ tipo: G.mov.tipo, x0: mm(b.x0), y0: mm(b.y0), x1: mm(b.x1), y1: mm(b.y1) });
+  }
+  return { tipo: 'boceto-mueble', v: 1, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera };
+}
+let mcVentana = null, mcPaquete = null;
+function descargarPaqueteMC() {
+  const pq = paqueteMueblecad();
+  descargar(((P.nombre || 'mueble') + ' - para MUEBLECAD.json').replace(/[\\/:*?"<>|]/g, ''), new Blob([JSON.stringify(pq)], { type: 'application/json' }));
+  aviso('Ábrelo en MUEBLECAD 2D con «📂 Abrir»');
+}
+function abrirMueblecad() {
+  if (!P.piezas.some(p => p.visible)) return aviso('No hay piezas visibles');
+  mcPaquete = paqueteMueblecad();
+  if (!mcPaquete.piezas.length) return aviso('No hay tableros: los metales y los cilindros no pasan a MUEBLECAD');
+  mcVentana = window.open(MC_URL + '?desde=boceto', '_blank');
+  const fallo = () => modal('MUEBLECAD 2D', `<p>No se ha podido abrir MUEBLECAD en otra pestaña${mcVentana ? ' o no responde' : ' (el navegador ha bloqueado la ventana)'}.</p>
+    <p class="nota">Comprueba que está el archivo <b>assets/mueblecad/mueblecad.html</b>. También puedes guardar el mueble y abrirlo en MUEBLECAD con «📂 Abrir».</p>`,
+    [{ txt: 'Cerrar' }, { txt: '⬇ Guardar para MUEBLECAD', primario: true, fn: descargarPaqueteMC }]);
+  if (!mcVentana) return fallo();
+  aviso('Abriendo el plano en MUEBLECAD 2D…');
+  setTimeout(() => { if (mcPaquete && !mcPaquete.enviado) fallo(); }, 8000);
+}
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!mcVentana || e.source !== mcVentana || !d || typeof d !== 'object') return;
+  if (d.tipo === 'mueblecad-listo' && mcPaquete) { mcVentana.postMessage({ tipo: 'boceto-mueble-envio', paquete: mcPaquete }, '*'); mcPaquete.enviado = true; }
+});
+$('#bMueblecad').onclick = abrirMueblecad;
+
 /* ===================== ARCHIVOS ===================== */
 function serializar() { return JSON.stringify(P); }
 let tLocal;
@@ -2825,8 +2890,9 @@ $('#bDespiece').onclick = () => {
   if (!P.piezas.length) return aviso('No hay piezas');
   modal('Despiece', `<p>¿Para qué lo quieres?</p>
     <p class="nota"><b>Hoja de cálculo</b>: un .csv con todas las piezas (medidas en cm, material, tablero, cantos y grupo).<br>
+    <b>MUEBLECAD</b>: el mueble para abrirlo en MUEBLECAD 2D (vistas y piezas).<br>
     <b>Anidador</b>: un .zip con un .csv por cada tablero (material y grosor, medidas en mm, veta y cantos) y las piezas con contorno como proyectos del Calcador, listos para abrir en el Anidador de la Suite CNC.</p>`, [
-    { txt: 'Cancelar' }, { txt: '📊 Hoja de cálculo (.csv)', fn: despieceCSV }, { txt: '🧩 Para el Anidador (.zip)', primario: true, fn: exportarAnidador }]);
+    { txt: 'Cancelar' }, { txt: '📊 Hoja de cálculo (.csv)', fn: despieceCSV }, { txt: '▱ Para MUEBLECAD (.json)', fn: descargarPaqueteMC }, { txt: '🧩 Para el Anidador (.zip)', primario: true, fn: exportarAnidador }]);
 };
 function despieceCSV() {
   const filas = {};
@@ -2834,7 +2900,7 @@ function despieceCSV() {
     const m = [p.w, p.h, p.d].sort((a, b) => b - a).map(v => (Math.round(v * 10) / 10).toString().replace('.', ','));
     const nuc = nucleoDe(p), mi = infoMaterial(p.material);
     const obs = [];
-    if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado en el Calcador' }[p.contorno.tipo] || 'contorno') + ')');
+    if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado a mano' }[p.contorno.tipo] || 'contorno') + ')');
     if (p.forma === 'cilindro') obs.push('cilíndrica');
     if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (p.cantos === 'sin' ? ', sin canto' : p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego'));
     const g = p.grupo && P.grupos[p.grupo] ? P.grupos[p.grupo].nombre : '';
@@ -2946,6 +3012,6 @@ window.addEventListener('resize', redimensionar);
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();
