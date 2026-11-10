@@ -29,7 +29,7 @@ la imagen final en PNG.
 - **Materiales**: maderas, melaminas, lacados, metales y cristal; tipo de tablero (macizo, aglomerado, MDF, contrachapado) y cantos; maderas desde fotos, con biblioteca personal y del aula.
 - **Render**: imagen realista hasta 4K con sombras suaves, oclusión y desenfoque de fondo.
 - **Lámina técnica**: vistas con aristas ocultas, cotas en mm y cajetín, en sistema europeo o americano; en **PDF** y **DXF**.
-- **Plano de taller en MUEBLECAD 2D** (botón ▱ MUEBLECAD): lámina de conjunto (alzado, planta y perfil con aristas ocultas y apertura de puertas) y lámina con todas las piezas desplegadas, con material, grueso, veta y cantos.
+- **Plano de taller en MUEBLECAD 2D** (botón ▱ MUEBLECAD): lámina de conjunto (alzado, planta y perfil con aristas ocultas y apertura de puertas) y lámina con todas las piezas desplegadas, con material, grueso, veta y cantos, cotas generales y de cada pieza, taladros de los herrajes y de las uniones (clavijas o Minifix) y la lista de compra.
 - **Despiece**: en CSV para hoja de cálculo, en JSON para MUEBLECAD o en ZIP para el **Anidador de tableros** de la [Suite CNC](https://github.com/eloiaa-hub/Suite-CNC).
 - **Ejemplos**: mesita de noche, estantería, aparador de dos puertas, mesa de comedor, cómoda, escritorio y mesa de centro.
 
@@ -44,6 +44,7 @@ Programa de CAD 2D para muebles, también independiente (`assets/mueblecad/muebl
 - Taladros y herrajes (sistema 32, bisagras, Minifix, clavijas, tiradores, galletas, espigas) y comprobaciones.
 - Cotas UNE que siguen a las piezas y que cambian la medida con doble clic; cortes, detalles ampliados y apertura de puertas.
 - Despiece con superficie y metros de canto, tabla de taladros, CSV para el Anidador.
+- Lista de compra y presupuesto: tablero, canto, herrajes y otros conceptos, con precios que se recuerdan, IVA y CSV.
 - DXF R2000 de ida y vuelta, SVG y PDF a escala con cajetín y plantilla del centro.
 
 ## Archivos

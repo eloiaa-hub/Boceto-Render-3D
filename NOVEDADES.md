@@ -6,6 +6,7 @@
 - Al pasar a MUEBLECAD, los **herrajes dejan sus taladros** en los tableros (tiradores, bisagras de cazoleta, guías de cajón y patas de metal) y las vistas de conjunto llevan la **marca con el número de cada pieza**.
 - **Uniones entre tableros** al pasar a MUEBLECAD: clavijas Ø8, Minifix en los extremos y clavijas, o ninguna. Cada unión deja los taladros en la cara de una pieza y en el canto de la otra.
 - **Cotas automáticas** en MUEBLECAD: generales del mueble (ancho y alto en el alzado, fondo en el perfil) y largo × ancho en cada pieza desplegada. Son cotas normales: siguen al dibujo y se pueden mover o borrar.
+- **Lista de compra y presupuesto** en MUEBLECAD (€ Presupuesto…): m² de tablero con su desperdicio, metros de canto, herrajes (los del mueble y las uniones llegan de Boceto) y conceptos libres, con precios que se recuerdan, IVA y total. Se descarga en CSV o se coloca en la lámina.
 - El aparador de ejemplo lleva bisagras de cazoleta.
 - 📋 Despiece → **Para MUEBLECAD (.json)**: el mismo envío en un archivo, por si el navegador bloquea la pestaña nueva.
 - 🪑 **Ejemplos**: además de la mesita, una estantería de melamina, un aparador de dos puertas, una mesa de comedor de fresno, una cómoda de tres cajones, un escritorio con cajonera y una mesa de centro con tapa de cristal.

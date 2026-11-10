@@ -2865,7 +2865,29 @@ function paqueteMueblecad(uniones) {
     const L = piezasGrupo(g).filter(p => p.visible); if (!L.length) continue;
     const b = bbox(L); aperturas.push({ tipo: G.mov.tipo, x0: mm(b.x0), y0: mm(b.y0), x1: mm(b.x1), y1: mm(b.y1) });
   }
-  return { tipo: 'boceto-mueble', v: 3, uniones, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera };
+  return { tipo: 'boceto-mueble', v: 3, uniones, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera, compras: comprasMueble(vis, piezas, esMetal) };
+}
+/* ---------- lista de compra: herrajes, metales, piezas cilíndricas y uniones (para el presupuesto de MUEBLECAD) ---------- */
+function comprasMueble(vis, piezas, esMetal) {
+  const C = new Map(), suma = (n, k) => C.set(n, (C.get(n) || 0) + (k || 1));
+  let guias = 0;
+  for (const p of vis) {
+    if (!esMetal(p) && p.forma !== 'cilindro') continue;
+    const n = p.nombre.toLowerCase(), nom = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '');
+    if (/brazo|placa|base bisagra/.test(n)) continue;              // va con su cazoleta
+    if (/cazoleta|bisagra/.test(n)) suma('Bisagra de cazoleta');
+    else if (/gu[ií]a|corredera/.test(n)) guias++;
+    else if (/pomo/.test(n)) suma('Pomo');
+    else if (/tirador|asa/.test(n)) suma('Tirador');
+    else if (/pata/.test(n)) suma(esMetal(p) ? 'Pata metálica' : 'Pata cilíndrica');
+    else suma(nom);
+  }
+  if (guias) suma('Guías de cajón (pareja)', Math.ceil(guias / 2));
+  for (const q of piezas) for (const t of q.tal || []) {
+    if (t.tipo === 'canto' && /clavija/i.test(t.nom)) suma('Clavija Ø8×30');
+    else if (/excéntrica/i.test(t.nom)) suma('Minifix (excéntrica y perno)');
+  }
+  return [...C].map(([n, cant]) => ({ n, cant }));
 }
 /* ---------- herrajes → taladros en la pieza (para MUEBLECAD) ----------
    Cada pieza de metal que toca la cara de un tablero deja sus agujeros, según su nombre. Medidas habituales,
