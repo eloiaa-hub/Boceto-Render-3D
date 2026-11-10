@@ -581,7 +581,11 @@ function dibujarVista(V) {
   if (bo && im && bo.visible !== false) {
     const [sx, sy] = w2s(V, bo.x, bo.y);
     c.globalAlpha = bo.opacidad ?? .6;
+    // en modo oscuro el papel blanco del boceto taparía la vista: se invierte (papel negro, trazo claro) y se suma al fondo
+    const oscuro = document.documentElement.dataset.theme === 'dark';
+    if (oscuro) { c.save(); c.filter = 'invert(1)'; c.globalCompositeOperation = 'screen'; }
     c.drawImage(im, sx, sy, im.naturalWidth * bo.cmPorPx * V.s, im.naturalHeight * bo.cmPorPx * V.s);
+    if (oscuro) c.restore();
     c.globalAlpha = 1;
   }
   // rejilla
