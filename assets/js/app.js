@@ -2865,7 +2865,8 @@ function paqueteMueblecad(uniones) {
     const L = piezasGrupo(g).filter(p => p.visible); if (!L.length) continue;
     const b = bbox(L); aperturas.push({ tipo: G.mov.tipo, x0: mm(b.x0), y0: mm(b.y0), x1: mm(b.x1), y1: mm(b.y1) });
   }
-  return { tipo: 'boceto-mueble', v: 3, uniones, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera, compras: comprasMueble(vis, piezas, esMetal) };
+  if (!P.uid) P.uid = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  return { tipo: 'boceto-mueble', v: 3, proyecto: P.uid, uniones, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera, compras: comprasMueble(vis, piezas, esMetal) };
 }
 /* ---------- lista de compra: herrajes, metales, piezas cilíndricas y uniones (para el presupuesto de MUEBLECAD) ---------- */
 function comprasMueble(vis, piezas, esMetal) {
@@ -3023,6 +3024,10 @@ function abrirMueblecad() {
 function enviarMueblecad(uniones) {
   mcPaquete = paqueteMueblecad(uniones);
   if (!mcPaquete.piezas.length) return aviso('No hay tableros: los metales y los cilindros no pasan a MUEBLECAD');
+  // si MUEBLECAD sigue abierto, se le reenvía el mueble (allí se elige actualizar el plano o empezar uno nuevo)
+  if (mcVentana && !mcVentana.closed) {
+    try { mcVentana.postMessage({ tipo: 'boceto-mueble-envio', paquete: mcPaquete }, '*'); mcPaquete.enviado = true; mcVentana.focus(); aviso('Mueble reenviado a MUEBLECAD 2D'); return; } catch (e) { /* se abre de nuevo */ }
+  }
   mcVentana = window.open(MC_URL + '?desde=boceto', '_blank');
   const fallo = () => modal('MUEBLECAD 2D', `<p>No se ha podido abrir MUEBLECAD en otra pestaña${mcVentana ? ' o no responde' : ' (el navegador ha bloqueado la ventana)'}.</p>
     <p class="nota">Comprueba que está el archivo <b>assets/mueblecad/mueblecad.html</b>. También puedes guardar el mueble y abrirlo en MUEBLECAD con «📂 Abrir».</p>`,
