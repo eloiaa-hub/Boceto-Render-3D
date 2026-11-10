@@ -2,6 +2,7 @@
 
 ## v3.4
 - ▱ **MUEBLECAD 2D**: el mueble pasa a un plano de taller con dos láminas A3: vistas de conjunto (alzado, planta y perfil, con aristas ocultas y apertura de puertas) y las piezas desplegadas como piezas de tablero (material, alma, grueso, veta, cantos y contorno), listas para añadir herrajes y taladros, acotar y sacar el despiece.
+- **Grueso del canto en cada lado** (sin canto, 0,4, 0,8, 1, 2 o 3 mm): se ve en el 3D (sin canto enseña el alma) y pasa al despiece, al Anidador y a MUEBLECAD.
 - Al pasar a MUEBLECAD, los **herrajes dejan sus taladros** en los tableros (tiradores, bisagras de cazoleta, guías de cajón y patas de metal) y las vistas de conjunto llevan la **marca con el número de cada pieza**.
 - El aparador de ejemplo lleva bisagras de cazoleta.
 - 📋 Despiece → **Para MUEBLECAD (.json)**: el mismo envío en un archivo, por si el navegador bloquea la pestaña nueva.

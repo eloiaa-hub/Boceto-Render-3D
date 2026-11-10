@@ -414,7 +414,12 @@ function exportarAnidador() {
     const clave = `${m.tipo === 'lacado' ? 'Lacado ' + p.color : m.nombre} ${fmtMM(gmm)} mm`;
     const nuc = nucleoDe(p);
     let cl = 0, ca = 0, tc = '';
-    if (nuc !== 'macizo' && p.cantos !== 'sin') { cl = 2; ca = 2; tc = 'Canto ' + (p.cantos === 'otro' ? infoMaterial(p.cantoMat).nombre : m.nombre); }
+    if (llevaCanto(p)) {
+      const eA = 'xyz'.split('').find(e => e !== ejeGrosor(p) && e !== md.ejeL), gL = [eA + '-', eA + '+'].map(l => cantoLado(p, l)), gA = [md.ejeL + '-', md.ejeL + '+'].map(l => cantoLado(p, l));
+      cl = gL.filter(Boolean).length; ca = gA.filter(Boolean).length;
+      const gs = [...new Set(gL.concat(gA).filter(Boolean))].sort((a, b) => a - b).map(v => String(v).replace('.', ',')).join('/');
+      if (cl || ca) tc = 'Canto ' + (p.cantos === 'otro' ? infoMaterial(p.cantoMat).nombre : m.nombre) + ' ' + gs + ' mm';
+    }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '').replace(/;/g, ',');
     if (tieneContorno(p)) {
       const Tp = TIPOS[p.plano], c = p.contorno, ka = p[DIM[Tp.h]] / c.cw * 10, kb = p[DIM[Tp.v]] / c.ch * 10;
@@ -445,7 +450,7 @@ function exportarAnidador() {
   const leeme = `Despiece de «${P.nombre || 'proyecto'}» para el Anidador (Suite CNC)\r\n\r\n` +
     `- Cada .csv es un tipo de tablero (material y grosor). Ábrelo en el Anidador con «📂 Abrir…» y pon las medidas de ese tablero.\r\n` +
     `- Medidas en mm. «veta = sí» en las maderas: el largo va en la dirección de la veta.\r\n` +
-    `- Cantos: 2 y 2 = todos los cantos con el tipo indicado; 0 = sin canto.\r\n` +
+    `- Cantos: lados largos y anchos con canto (2 y 2 = todos), con el material y el grueso indicados; 0 = sin canto.\r\n` +
     (Object.keys(contornos).length ? `- La carpeta «contornos» tiene las piezas con contorno como proyectos del Calcador (.json). Ábrelas junto al .csv del mismo tablero; si el nombre dice (xN), pon esa cantidad en el Anidador.\r\n` : '') +
     (fuera.length ? `- No se incluyen herrajes, metales, cristal ni piezas cilíndricas: ${[...new Set(fuera)].join(', ').replace(/\.$/, '')}.\r\n` : '');
   archivos.unshift({ nombre: 'LEEME.txt', datos: leeme });

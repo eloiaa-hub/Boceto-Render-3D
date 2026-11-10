@@ -102,6 +102,7 @@ function pintarProps() {
   $('#filaCantos').classList.toggle('oculto', nuc === 'macizo');
   $('#filaCantoMat').classList.toggle('oculto', nuc === 'macizo' || p.cantos !== 'otro');
   $('#filaCantoColor').classList.toggle('oculto', nuc === 'macizo' || p.cantos !== 'otro' || p.cantoMat !== 'lacado');
+  pintarCantoG(L);
   $('#bDesagrupar').disabled = !L.some(q => q.grupo);
   // movimiento
   const mg = g || (uno && !p.grupo ? '_nuevo' : null);
@@ -114,6 +115,21 @@ function pintarProps() {
   }
 }
 
+function pintarCantoG(L) {
+  const con = L.filter(llevaCanto), caja = $('#cantoG');
+  $('#filaCantoG').classList.toggle('oculto', !con.length);
+  if (!con.length || caja.contains(document.activeElement)) return;
+  const lados = Object.keys(LADOS_CANTO).filter(l => con.some(q => ladosCanto(q).includes(l)));
+  const val = l => { const v = con.filter(q => ladosCanto(q).includes(l)).map(q => cantoLado(q, l)); return v.every(x => x === v[0]) ? v[0] : ''; };
+  const opc = (v, todos) => (todos || v === '' ? '<option value="">—</option>' : '') + GRUESOS_CANTO.map(g => `<option value="${g}" ${v !== '' && +v === g ? 'selected' : ''}>${g ? String(g).replace('.', ',') + ' mm' : 'Sin canto'}</option>`).join('');
+  caja.innerHTML = `<label class="fila">Todos <select data-l="*">${opc('', true)}</select></label>` + lados.map(l => `<label class="fila">${LADOS_CANTO[l]} <select data-l="${l}">${opc(val(l))}</select></label>`).join('');
+  caja.querySelectorAll('select').forEach(s => s.onchange = () => {
+    if (s.value === '') return;
+    const v = +s.value, l = s.dataset.l; guardarHistoria();
+    con.forEach(q => { q.cantoG = Object.assign({}, q.cantoG); (l === '*' ? ladosCanto(q) : ladosCanto(q).includes(l) ? [l] : []).forEach(k => q.cantoG[k] = v); });
+    document.activeElement.blur(); cambio(true);
+  });
+}
 const CAMPOS = { pNombre: 'nombre', pForma: 'forma', pEje: 'eje', pX: 'x', pY: 'y', pZ: 'z', pW: 'w', pH: 'h', pD: 'd', pMaterial: 'material', pColor: 'color', pAcabado: 'acabado', pVeta: 'veta', pCanto: 'canto',
   pNucleo: 'nucleo', pCantos: 'cantos', pCantoMat: 'cantoMat', pCantoColor: 'cantoColor' };
 for (const [id, campo] of Object.entries(CAMPOS)) {

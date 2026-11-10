@@ -20,8 +20,8 @@ function paqueteMueblecad() {
     const cristal = m.tipo === 'cristal', nuc = nucleoDe(p), md = medidasTablero(p);
     const base = m.tipo === 'lacado' ? 'Lacado ' + p.color : m.nombre;
     const mat = { n: cristal ? 'Vidrio' : base + (nuc === 'macizo' ? ' macizo' : ' · ' + ALMAS[nuc].nombre.toLowerCase()), pat: cristal ? 'VIDRIO' : PAT_ALMA[nuc] || 'AGLOMERADO', veta: md.veta && !cristal };
-    const canto = !cristal && nuc !== 'macizo' && p.cantos !== 'sin' ? 1 : 0;
     const th = ejeGrosor(p), eL = md.ejeL, eA = 'xyz'.split('').find(e => e !== th && e !== eL);
+    const cantosLado = { aMin: cantoLado(p, eL + '-'), aMax: cantoLado(p, eL + '+'), bMin: cantoLado(p, eA + '-'), bMax: cantoLado(p, eA + '+') }, canto = Math.max(...Object.values(cantosLado));
     // contorno en coordenadas de la cara: a a lo largo de la veta (eje largo), b a lo ancho, en mm desde la esquina de la pieza
     let conts = null;
     if (tieneContorno(p) && TIPOS[p.plano].prof === th) {
@@ -33,7 +33,7 @@ function paqueteMueblecad() {
       conts = loc.map(l => ({ pts: l.pts.map(q => aCara(q.x, q.y)), b: (l.b || []).map(x => espejo ? -x : +x) }));
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
-    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, conts, girar: false,
+    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, cantosLado, conts, girar: false,
       tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))), marcaV: anclaMarca(p, vis) });
   }
   const aperturas = [];
@@ -208,7 +208,7 @@ function despieceCSV() {
     const obs = [];
     if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado a mano' }[p.contorno.tipo] || 'contorno') + ')');
     if (p.forma === 'cilindro') obs.push('cilíndrica');
-    if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (p.cantos === 'sin' ? ', sin canto' : p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego'));
+    if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (!llevaCanto(p) ? ', sin canto' : (p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego') + ' ' + resumenCantos(p)));
     const g = p.grupo && P.grupos[p.grupo] ? P.grupos[p.grupo].nombre : '';
     const k = [p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, ''), ...m, mi.nombre, obs.join('; '), g].map(s => String(s).replace(/;/g, ',')).join(';');
     filas[k] = (filas[k] || 0) + 1;

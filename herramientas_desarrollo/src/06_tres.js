@@ -81,6 +81,20 @@ function matAlma(n) {
   const A = ALMAS[n], mat = new T.MeshStandardMaterial({ map: textura(window.TEXTURAS[A.tex], ck), roughness: .9 });
   mat.userData.cm = mat.userData.cmV = A.cm; return cacheMat[ck] = mat;
 }
+// ---------- grueso del canto en cada lado (mm; 0 = sin canto). Lados por su dirección: x- izquierdo, x+ derecho… ----------
+const LADOS_CANTO = { 'x-': 'Izquierdo', 'x+': 'Derecho', 'y-': 'Inferior', 'y+': 'Superior', 'z-': 'Trasero', 'z+': 'Delantero' };
+const GRUESOS_CANTO = [0, .4, .8, 1, 2, 3];
+function llevaCanto(p) { const m = infoMaterial(p.material); return p.forma !== 'cilindro' && !['metal', 'metalpint', 'cristal'].includes(m.tipo) && nucleoDe(p) !== 'macizo' && p.cantos !== 'sin'; }
+function ladosCanto(p) { const th = ejeGrosor(p); return Object.keys(LADOS_CANTO).filter(k => k[0] !== th); }
+function cantoLado(p, l) { if (!llevaCanto(p)) return 0; const v = p.cantoG && p.cantoG[l]; return v == null ? 1 : +v; }
+function resumenCantos(p) { // «1 mm» si todos iguales; si no, «delantero 2 mm, resto 1 mm» o lado a lado
+  const L = ladosCanto(p), v = L.map(l => cantoLado(p, l)), f = x => String(x).replace('.', ',') + ' mm';
+  if (v.every(x => x === v[0])) return v[0] ? f(v[0]) : 'sin canto';
+  const cuenta = {}; v.forEach(x => cuenta[x] = (cuenta[x] || 0) + 1);
+  const comun = +Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0];
+  const d = L.filter((l, i) => v[i] !== comun).map(l => LADOS_CANTO[l].toLowerCase() + ' ' + (cantoLado(p, l) ? f(cantoLado(p, l)) : 'sin canto'));
+  return d.join(', ') + ', resto ' + (comun ? f(comun) : 'sin canto');
+}
 function cantoInfo(p) {
   const nuc = nucleoDe(p), cara = material(p);
   if (nuc === 'macizo') return { modo: 'macizo', mat: cara, cm: cara.userData.cm, cmV: cara.userData.cmV };
@@ -179,8 +193,9 @@ function materialesDe(p, tipo) {
   if (tipo === 'cilindro') return material(p);
   const cara = material(p), canto = cantoInfo(p).mat;
   if (tipo === 'perfil') return [cara, canto];
-  const th = 'xyz'.indexOf(ejeGrosor(p));
-  return [0, 1, 2, 3, 4, 5].map(i => (i >> 1) === th ? cara : canto);
+  const th = 'xyz'.indexOf(ejeGrosor(p)), nuc = nucleoDe(p);
+  // caras de la caja: +x, -x, +y, -y, +z, -z; un lado sin canto enseña el alma
+  return [0, 1, 2, 3, 4, 5].map(i => (i >> 1) === th ? cara : (llevaCanto(p) && !cantoLado(p, 'xyz'[i >> 1] + (i & 1 ? '-' : '+')) ? matAlma(nuc) : canto));
 }
 
 const mallas = new Map();

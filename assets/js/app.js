@@ -1033,6 +1033,7 @@ function pintarProps() {
   $('#filaCantos').classList.toggle('oculto', nuc === 'macizo');
   $('#filaCantoMat').classList.toggle('oculto', nuc === 'macizo' || p.cantos !== 'otro');
   $('#filaCantoColor').classList.toggle('oculto', nuc === 'macizo' || p.cantos !== 'otro' || p.cantoMat !== 'lacado');
+  pintarCantoG(L);
   $('#bDesagrupar').disabled = !L.some(q => q.grupo);
   // movimiento
   const mg = g || (uno && !p.grupo ? '_nuevo' : null);
@@ -1045,6 +1046,21 @@ function pintarProps() {
   }
 }
 
+function pintarCantoG(L) {
+  const con = L.filter(llevaCanto), caja = $('#cantoG');
+  $('#filaCantoG').classList.toggle('oculto', !con.length);
+  if (!con.length || caja.contains(document.activeElement)) return;
+  const lados = Object.keys(LADOS_CANTO).filter(l => con.some(q => ladosCanto(q).includes(l)));
+  const val = l => { const v = con.filter(q => ladosCanto(q).includes(l)).map(q => cantoLado(q, l)); return v.every(x => x === v[0]) ? v[0] : ''; };
+  const opc = (v, todos) => (todos || v === '' ? '<option value="">—</option>' : '') + GRUESOS_CANTO.map(g => `<option value="${g}" ${v !== '' && +v === g ? 'selected' : ''}>${g ? String(g).replace('.', ',') + ' mm' : 'Sin canto'}</option>`).join('');
+  caja.innerHTML = `<label class="fila">Todos <select data-l="*">${opc('', true)}</select></label>` + lados.map(l => `<label class="fila">${LADOS_CANTO[l]} <select data-l="${l}">${opc(val(l))}</select></label>`).join('');
+  caja.querySelectorAll('select').forEach(s => s.onchange = () => {
+    if (s.value === '') return;
+    const v = +s.value, l = s.dataset.l; guardarHistoria();
+    con.forEach(q => { q.cantoG = Object.assign({}, q.cantoG); (l === '*' ? ladosCanto(q) : ladosCanto(q).includes(l) ? [l] : []).forEach(k => q.cantoG[k] = v); });
+    document.activeElement.blur(); cambio(true);
+  });
+}
 const CAMPOS = { pNombre: 'nombre', pForma: 'forma', pEje: 'eje', pX: 'x', pY: 'y', pZ: 'z', pW: 'w', pH: 'h', pD: 'd', pMaterial: 'material', pColor: 'color', pAcabado: 'acabado', pVeta: 'veta', pCanto: 'canto',
   pNucleo: 'nucleo', pCantos: 'cantos', pCantoMat: 'cantoMat', pCantoColor: 'cantoColor' };
 for (const [id, campo] of Object.entries(CAMPOS)) {
@@ -1925,6 +1941,20 @@ function matAlma(n) {
   const A = ALMAS[n], mat = new T.MeshStandardMaterial({ map: textura(window.TEXTURAS[A.tex], ck), roughness: .9 });
   mat.userData.cm = mat.userData.cmV = A.cm; return cacheMat[ck] = mat;
 }
+// ---------- grueso del canto en cada lado (mm; 0 = sin canto). Lados por su dirección: x- izquierdo, x+ derecho… ----------
+const LADOS_CANTO = { 'x-': 'Izquierdo', 'x+': 'Derecho', 'y-': 'Inferior', 'y+': 'Superior', 'z-': 'Trasero', 'z+': 'Delantero' };
+const GRUESOS_CANTO = [0, .4, .8, 1, 2, 3];
+function llevaCanto(p) { const m = infoMaterial(p.material); return p.forma !== 'cilindro' && !['metal', 'metalpint', 'cristal'].includes(m.tipo) && nucleoDe(p) !== 'macizo' && p.cantos !== 'sin'; }
+function ladosCanto(p) { const th = ejeGrosor(p); return Object.keys(LADOS_CANTO).filter(k => k[0] !== th); }
+function cantoLado(p, l) { if (!llevaCanto(p)) return 0; const v = p.cantoG && p.cantoG[l]; return v == null ? 1 : +v; }
+function resumenCantos(p) { // «1 mm» si todos iguales; si no, «delantero 2 mm, resto 1 mm» o lado a lado
+  const L = ladosCanto(p), v = L.map(l => cantoLado(p, l)), f = x => String(x).replace('.', ',') + ' mm';
+  if (v.every(x => x === v[0])) return v[0] ? f(v[0]) : 'sin canto';
+  const cuenta = {}; v.forEach(x => cuenta[x] = (cuenta[x] || 0) + 1);
+  const comun = +Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0];
+  const d = L.filter((l, i) => v[i] !== comun).map(l => LADOS_CANTO[l].toLowerCase() + ' ' + (cantoLado(p, l) ? f(cantoLado(p, l)) : 'sin canto'));
+  return d.join(', ') + ', resto ' + (comun ? f(comun) : 'sin canto');
+}
 function cantoInfo(p) {
   const nuc = nucleoDe(p), cara = material(p);
   if (nuc === 'macizo') return { modo: 'macizo', mat: cara, cm: cara.userData.cm, cmV: cara.userData.cmV };
@@ -2023,8 +2053,9 @@ function materialesDe(p, tipo) {
   if (tipo === 'cilindro') return material(p);
   const cara = material(p), canto = cantoInfo(p).mat;
   if (tipo === 'perfil') return [cara, canto];
-  const th = 'xyz'.indexOf(ejeGrosor(p));
-  return [0, 1, 2, 3, 4, 5].map(i => (i >> 1) === th ? cara : canto);
+  const th = 'xyz'.indexOf(ejeGrosor(p)), nuc = nucleoDe(p);
+  // caras de la caja: +x, -x, +y, -y, +z, -z; un lado sin canto enseña el alma
+  return [0, 1, 2, 3, 4, 5].map(i => (i >> 1) === th ? cara : (llevaCanto(p) && !cantoLado(p, 'xyz'[i >> 1] + (i & 1 ? '-' : '+')) ? matAlma(nuc) : canto));
 }
 
 const mallas = new Map();
@@ -2745,7 +2776,12 @@ function exportarAnidador() {
     const clave = `${m.tipo === 'lacado' ? 'Lacado ' + p.color : m.nombre} ${fmtMM(gmm)} mm`;
     const nuc = nucleoDe(p);
     let cl = 0, ca = 0, tc = '';
-    if (nuc !== 'macizo' && p.cantos !== 'sin') { cl = 2; ca = 2; tc = 'Canto ' + (p.cantos === 'otro' ? infoMaterial(p.cantoMat).nombre : m.nombre); }
+    if (llevaCanto(p)) {
+      const eA = 'xyz'.split('').find(e => e !== ejeGrosor(p) && e !== md.ejeL), gL = [eA + '-', eA + '+'].map(l => cantoLado(p, l)), gA = [md.ejeL + '-', md.ejeL + '+'].map(l => cantoLado(p, l));
+      cl = gL.filter(Boolean).length; ca = gA.filter(Boolean).length;
+      const gs = [...new Set(gL.concat(gA).filter(Boolean))].sort((a, b) => a - b).map(v => String(v).replace('.', ',')).join('/');
+      if (cl || ca) tc = 'Canto ' + (p.cantos === 'otro' ? infoMaterial(p.cantoMat).nombre : m.nombre) + ' ' + gs + ' mm';
+    }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '').replace(/;/g, ',');
     if (tieneContorno(p)) {
       const Tp = TIPOS[p.plano], c = p.contorno, ka = p[DIM[Tp.h]] / c.cw * 10, kb = p[DIM[Tp.v]] / c.ch * 10;
@@ -2776,7 +2812,7 @@ function exportarAnidador() {
   const leeme = `Despiece de «${P.nombre || 'proyecto'}» para el Anidador (Suite CNC)\r\n\r\n` +
     `- Cada .csv es un tipo de tablero (material y grosor). Ábrelo en el Anidador con «📂 Abrir…» y pon las medidas de ese tablero.\r\n` +
     `- Medidas en mm. «veta = sí» en las maderas: el largo va en la dirección de la veta.\r\n` +
-    `- Cantos: 2 y 2 = todos los cantos con el tipo indicado; 0 = sin canto.\r\n` +
+    `- Cantos: lados largos y anchos con canto (2 y 2 = todos), con el material y el grueso indicados; 0 = sin canto.\r\n` +
     (Object.keys(contornos).length ? `- La carpeta «contornos» tiene las piezas con contorno como proyectos del Calcador (.json). Ábrelas junto al .csv del mismo tablero; si el nombre dice (xN), pon esa cantidad en el Anidador.\r\n` : '') +
     (fuera.length ? `- No se incluyen herrajes, metales, cristal ni piezas cilíndricas: ${[...new Set(fuera)].join(', ').replace(/\.$/, '')}.\r\n` : '');
   archivos.unshift({ nombre: 'LEEME.txt', datos: leeme });
@@ -2805,8 +2841,8 @@ function paqueteMueblecad() {
     const cristal = m.tipo === 'cristal', nuc = nucleoDe(p), md = medidasTablero(p);
     const base = m.tipo === 'lacado' ? 'Lacado ' + p.color : m.nombre;
     const mat = { n: cristal ? 'Vidrio' : base + (nuc === 'macizo' ? ' macizo' : ' · ' + ALMAS[nuc].nombre.toLowerCase()), pat: cristal ? 'VIDRIO' : PAT_ALMA[nuc] || 'AGLOMERADO', veta: md.veta && !cristal };
-    const canto = !cristal && nuc !== 'macizo' && p.cantos !== 'sin' ? 1 : 0;
     const th = ejeGrosor(p), eL = md.ejeL, eA = 'xyz'.split('').find(e => e !== th && e !== eL);
+    const cantosLado = { aMin: cantoLado(p, eL + '-'), aMax: cantoLado(p, eL + '+'), bMin: cantoLado(p, eA + '-'), bMax: cantoLado(p, eA + '+') }, canto = Math.max(...Object.values(cantosLado));
     // contorno en coordenadas de la cara: a a lo largo de la veta (eje largo), b a lo ancho, en mm desde la esquina de la pieza
     let conts = null;
     if (tieneContorno(p) && TIPOS[p.plano].prof === th) {
@@ -2818,7 +2854,7 @@ function paqueteMueblecad() {
       conts = loc.map(l => ({ pts: l.pts.map(q => aCara(q.x, q.y)), b: (l.b || []).map(x => espejo ? -x : +x) }));
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
-    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, conts, girar: false,
+    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, cantosLado, conts, girar: false,
       tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))), marcaV: anclaMarca(p, vis) });
   }
   const aperturas = [];
@@ -2993,7 +3029,7 @@ function despieceCSV() {
     const obs = [];
     if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado a mano' }[p.contorno.tipo] || 'contorno') + ')');
     if (p.forma === 'cilindro') obs.push('cilíndrica');
-    if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (p.cantos === 'sin' ? ', sin canto' : p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego'));
+    if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (!llevaCanto(p) ? ', sin canto' : (p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego') + ' ' + resumenCantos(p)));
     const g = p.grupo && P.grupos[p.grupo] ? P.grupos[p.grupo].nombre : '';
     const k = [p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, ''), ...m, mi.nombre, obs.join('; '), g].map(s => String(s).replace(/;/g, ',')).join(';');
     filas[k] = (filas[k] || 0) + 1;
