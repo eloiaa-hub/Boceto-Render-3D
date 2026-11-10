@@ -186,3 +186,9 @@ input:disabled,select:disabled{opacity:.55}
 @media (max-width:1500px){ .barra .autor{display:none} }
 @media (max-width:1380px){ .barra button .txt{display:none} .barra button{padding-left:8px;padding-right:8px} .barra button.primario .txt,.barra #bMueblecad .txt{display:inline} }
 @media (max-width:1000px){ .barra button.primario .txt,.barra #bMueblecad .txt{display:none} .barra .marca b{display:none} }
+
+/* ---- v3.4: ventana de ejemplos ---- */
+.ejemplos{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ejemplos button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 12px}
+.ejemplos button small{opacity:.75;font-weight:400}
+.ejemplos button:hover{border-color:var(--acento)}

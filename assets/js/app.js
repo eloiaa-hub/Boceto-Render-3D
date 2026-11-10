@@ -2889,7 +2889,18 @@ $('#bAbrir').onclick = async () => {
   try { const o = JSON.parse(f.datos); if (!Array.isArray(o.piezas)) throw 0; await cargarProyecto(o); aviso('Proyecto abierto: ' + f.nombre); }
   catch (e) { aviso('Ese archivo no es un proyecto de Boceto a Render 3D'); }
 };
-$('#bEjemplo').onclick = () => cargarProyecto(JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
+function listaEjemplos() {
+  return [{ clave: 'mesita', nombre: 'mesita de noche', desc: 'Roble macizo, dos cajones completos, tapa con las esquinas redondeadas y su boceto de fondo', proyecto: window.EJEMPLO_MESITA }]
+    .concat(window.EJEMPLOS_MUEBLES || []).filter(e => e.proyecto);
+}
+function abrirEjemplo(e) { cargarProyecto(JSON.parse(JSON.stringify(e.proyecto))).then(() => { encuadrarTodo(); aviso('Ejemplo: ' + e.nombre); }); }
+$('#bEjemplo').onclick = () => {
+  const L = listaEjemplos();
+  const html = `<p class="nota">Se cargan en lugar del proyecto actual (guárdalo antes si lo necesitas). Puedes cambiarlos, renderizarlos o pasarlos a MUEBLECAD.</p>
+    <div class="ejemplos">${L.map((e, i) => `<button data-ej="${i}"><b>${esc(e.nombre.charAt(0).toUpperCase() + e.nombre.slice(1))}</b><small>${esc(e.desc)} · ${e.proyecto.piezas.length} piezas</small></button>`).join('')}</div>`;
+  modal('Muebles de ejemplo', html, [{ txt: 'Cancelar' }], '560px');
+  $$('#mCuerpo [data-ej]').forEach(b => b.onclick = () => { cerrarModal(); abrirEjemplo(L[+b.dataset.ej]); });
+};
 $('#bDespiece').onclick = () => {
   if (!P.piezas.length) return aviso('No hay piezas');
   modal('Despiece', `<p>¿Para qué lo quieres?</p>
