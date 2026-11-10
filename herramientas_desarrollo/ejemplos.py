@@ -60,6 +60,12 @@ for lado, x0 in (('izq', 0), ('der', W / 2)):
     m.p('Puerta ' + ('izquierda' if lado == 'izq' else 'derecha'), x0 + .2, yP + .2, D, W / 2 - .4, H - .4, 1.9, 'roble', 'y', 1, 'aglomerado', grupo=G)
     xt = x0 + W / 2 - 6 if lado == 'izq' else x0 + 4.8
     m.p('Tirador ' + ('izquierdo' if lado == 'izq' else 'derecho'), xt, yP + H / 2 - 8, D + 1.9, 1.2, 16, 1.8, 'negro_mate', None, 3, grupo=G)
+    # dos bisagras de cazoleta en el canto exterior de cada puerta (como las pone la plantilla «Bisagras»)
+    fx, fw = x0 + .2, W / 2 - .4
+    for cy in (yP + .2 + 10, yP + H - .2 - 10):
+        cx = fx + 2.25 if lado == 'izq' else fx + fw - 2.25
+        m.p('Cazoleta bisagra', cx - 1.75, cy - 1.75, D - .15, 3.5, 3.5, .15, 'inox', None, 0, grupo=G, forma='cilindro', eje='z')
+        m.p('Brazo bisagra', fx + .2 if lado == 'izq' else fx + fw - 4.2, cy - .7, D - 1.25, 4, 1.4, 1.1, 'inox', None, 2, grupo=G)
 Gp = m.g('Patas')
 for nom, x, z in (('trasera izq.', 3, 3), ('trasera der.', W - 6, 3), ('delantera izq.', 3, D - 6), ('delantera der.', W - 6, D - 6)):
     m.p('Pata ' + nom, x, 0, z, 3, yP, 3, 'negro_mate', None, 1, grupo=Gp)

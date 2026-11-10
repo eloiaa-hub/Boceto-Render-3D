@@ -12,24 +12,29 @@ function paqueteMueblecad() {
     const T = TIPOS[t], ar = aristasVista(T), mp = ([a, b]) => [mm(T.hs > 0 ? a : -a), mm(T.vs > 0 ? b : -b)];
     vistas[t] = { nombre: T.nombre, vis: ar.vis.map(s => s.map(mp)), ocu: ar.ocu.map(s => s.map(mp)) };
   });
-  const piezas = [], fuera = [];
-  for (const p of P.piezas) {
-    if (!p.visible) continue;
+  const piezas = [], fuera = [], vis = P.piezas.filter(p => p.visible);
+  const esMetal = p => ['metal', 'metalpint'].includes(infoMaterial(p.material).tipo);
+  for (const p of vis) {
     const m = infoMaterial(p.material);
-    if (['metal', 'metalpint'].includes(m.tipo) || p.forma === 'cilindro') { fuera.push(p.nombre); continue; }
+    if (esMetal(p) || p.forma === 'cilindro') { fuera.push(p.nombre); continue; }
     const cristal = m.tipo === 'cristal', nuc = nucleoDe(p), md = medidasTablero(p);
     const base = m.tipo === 'lacado' ? 'Lacado ' + p.color : m.nombre;
     const mat = { n: cristal ? 'Vidrio' : base + (nuc === 'macizo' ? ' macizo' : ' · ' + ALMAS[nuc].nombre.toLowerCase()), pat: cristal ? 'VIDRIO' : PAT_ALMA[nuc] || 'AGLOMERADO', veta: md.veta && !cristal };
     const canto = !cristal && nuc !== 'macizo' && p.cantos !== 'sin' ? 1 : 0;
-    let conts = null, girar = false;
-    if (tieneContorno(p) && TIPOS[p.plano].prof === ejeGrosor(p)) {
+    const th = ejeGrosor(p), eL = md.ejeL, eA = 'xyz'.split('').find(e => e !== th && e !== eL);
+    // contorno en coordenadas de la cara: a a lo largo de la veta (eje largo), b a lo ancho, en mm desde la esquina de la pieza
+    let conts = null;
+    if (tieneContorno(p) && TIPOS[p.plano].prof === th) {
       const Tp = TIPOS[p.plano], c = p.contorno, ka = p[DIM[Tp.h]] / c.cw * 10, kb = p[DIM[Tp.v]] / c.ch * 10;
-      const conv = an => ({ pts: an.map(([u, v]) => ({ x: Math.round(u * ka * 1000) / 1000, y: Math.round(v * kb * 1000) / 1000 })), b: an.map(() => 0) });
-      conts = contornosCalcadorMM(p) || [conv(c.ext), ...(c.huecos || []).map(conv)];
-      girar = md.ejeL !== Tp.h;
+      const conv = an => ({ pts: an.map(([u, v]) => ({ x: u * ka, y: v * kb })), b: an.map(() => 0) });
+      const loc = contornosCalcadorMM(p) || [conv(c.ext), ...(c.huecos || []).map(conv)];
+      const dv = p[DIM[Tp.v]] * 10, aCara = (u, v) => { const w = { [Tp.h]: u, [Tp.v]: Tp.vs > 0 ? v : dv - v }; return { x: Math.round(w[eL] * 1000) / 1000, y: Math.round(w[eA] * 1000) / 1000 }; };
+      const espejo = (Tp.h === eL ? Tp.vs : -Tp.vs) < 0;
+      conts = loc.map(l => ({ pts: l.pts.map(q => aCara(q.x, q.y)), b: (l.b || []).map(x => espejo ? -x : +x) }));
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
-    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, conts, girar });
+    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, conts, girar: false,
+      tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))), marcaV: anclaMarca(p, vis) });
   }
   const aperturas = [];
   for (const [g, G] of Object.entries(P.grupos)) {
@@ -37,7 +42,76 @@ function paqueteMueblecad() {
     const L = piezasGrupo(g).filter(p => p.visible); if (!L.length) continue;
     const b = bbox(L); aperturas.push({ tipo: G.mov.tipo, x0: mm(b.x0), y0: mm(b.y0), x1: mm(b.x1), y1: mm(b.y1) });
   }
-  return { tipo: 'boceto-mueble', v: 1, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera };
+  return { tipo: 'boceto-mueble', v: 2, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera };
+}
+/* ---------- herrajes → taladros en la pieza (para MUEBLECAD) ----------
+   Cada pieza de metal que toca la cara de un tablero deja sus agujeros, según su nombre. Medidas habituales,
+   orientativas: se revisan en MUEBLECAD. Coordenadas en mm sobre la cara (a: eje largo, b: eje ancho). */
+function taladrosHerrajes(p, th, eL, eA, metales) {
+  const O = [], t0 = p[th], t1 = p[th] + p[DIM[th]], tol = .06, g = p[DIM[th]] * 10;
+  const r = v => Math.round(v * 100) / 100, prof = v => Math.min(v, Math.max(1, g - 3));
+  for (const q of metales) {
+    if (q.forma === 'cilindro' && q.eje !== th) continue; // una cazoleta o un pernio solo marcan la pieza en la que entran de frente
+    const a0 = Math.max(p[eL], q[eL]), a1 = Math.min(p[eL] + p[DIM[eL]], q[eL] + q[DIM[eL]]);
+    const b0 = Math.max(p[eA], q[eA]), b1 = Math.min(p[eA] + p[DIM[eA]], q[eA] + q[DIM[eA]]);
+    if (a1 - a0 <= 0 || b1 - b0 <= 0) continue;
+    const m0 = q[th], m1 = q[th] + q[DIM[th]];
+    if (m0 > t1 + tol || m1 < t0 - tol) continue;
+    const cara = Math.abs(m0 - t1) <= Math.abs(m1 - t0) ? 'A' : 'B';
+    const F = { a0: (a0 - p[eL]) * 10, a1: (a1 - p[eL]) * 10, b0: (b0 - p[eA]) * 10, b1: (b1 - p[eA]) * 10 };
+    const ca = (F.a0 + F.a1) / 2, cb = (F.b0 + F.b1) / 2, la = F.a1 - F.a0, lb = F.b1 - F.b0, n = q.nombre.toLowerCase();
+    const add = (a, b, d, pr, nom) => { if (a > 1 && b > 1 && a < p[DIM[eL]] * 10 - 1 && b < p[DIM[eA]] * 10 - 1) O.push({ a: r(a), b: r(b), d, prof: pr, cara, nom }); };
+    if (/tirador|pomo|asa/.test(n)) {
+      const L = Math.max(la, lb), alA = la >= lb;
+      if (L < 30) { add(ca, cb, 4, 0, q.nombre); continue; }
+      const ent = [32, 64, 96, 128, 160, 192, 224, 256, 320].filter(v => v <= L - 8).pop() || 32;
+      for (const s of [-1, 1]) add(alA ? ca + s * ent / 2 : ca, alA ? cb : cb + s * ent / 2, 4, 0, q.nombre);
+    } else if (/cazoleta/.test(n)) {
+      add(ca, cb, 35, prof(13), 'Bisagra');
+      // tornillos: 9,5 mm más hacia dentro que la cazoleta y a ±22,5 mm a lo largo del canto más cercano
+      const dA = Math.min(ca, p[DIM[eL]] * 10 - ca), dB = Math.min(cb, p[DIM[eA]] * 10 - cb);
+      if (dA <= dB) { const s = ca < p[DIM[eL]] * 5 ? 1 : -1; for (const k of [-1, 1]) add(ca + s * 9.5, cb + k * 22.5, 2.5, prof(10), 'Bisagra'); }
+      else { const s = cb < p[DIM[eA]] * 5 ? 1 : -1; for (const k of [-1, 1]) add(ca + k * 22.5, cb + s * 9.5, 2.5, prof(10), 'Bisagra'); }
+    } else if (/brazo|placa|base bisagra/.test(n)) {
+      // placa de montaje: dos agujeros a 32 mm (sistema 32), a 37 mm del canto delantero si el brazo está junto a él
+      const vert = eL === 'y' ? 'a' : eA === 'y' ? 'b' : (la <= lb ? 'b' : 'a');
+      let pa = ca, pb = cb;
+      if (vert === 'a') { const Lb = p[DIM[eA]] * 10; if (Lb - F.b1 < 60) pb = Lb - 37; else if (F.b0 < 60) pb = 37; }
+      else { const La = p[DIM[eL]] * 10; if (La - F.a1 < 60) pa = La - 37; else if (F.a0 < 60) pa = 37; }
+      for (const k of [-1, 1]) add(vert === 'a' ? pa + k * 16 : pa, vert === 'b' ? pb + k * 16 : pb, 5, prof(12), 'Placa de bisagra');
+    } else if (/gu[ií]a|corredera/.test(n)) {
+      const alA = la >= lb, L = alA ? la : lb, ini = alA ? F.a0 : F.b0;
+      const pos = L > 150 ? [37, L / 2, L - 37] : L > 60 ? [20, L - 20] : [L / 2];
+      for (const s of pos) add(alA ? ini + s : ca, alA ? cb : ini + s, 2.5, prof(10), 'Guía');
+    } else if (/pata|pie/.test(n)) {
+      for (const [i, j] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) add(ca + i * la / 4, cb + j * lb / 4, 3, prof(10), q.nombre);
+    }
+  }
+  return O;
+}
+/* ---------- marca de pieza: punto visible de la pieza en la vista donde más se ve ---------- */
+function anclaMarca(p, todas) {
+  let mejor = null, oculta = null;
+  for (const t of ['alzado', 'perfil', 'planta']) {
+    const T = TIPOS[t], H = T.h, Vv = T.v, Pr = T.prof;
+    const fr = q => T.frente > 0 ? q[Pr] + q[DIM[Pr]] : -q[Pr];
+    const a0 = p[H], a1 = p[H] + p[DIM[H]], b0 = p[Vv], b1 = p[Vv] + p[DIM[Vv]];
+    if (a1 - a0 < .3 || b1 - b0 < .3) continue;
+    const delante = todas.filter(q => q !== p && fr(q) > fr(p) + .01 && q[H] < a1 && q[H] + q[DIM[H]] > a0 && q[Vv] < b1 && q[Vv] + q[DIM[Vv]] > b0);
+    let n = 0, best = null; const N = 9, ca = (a0 + a1) / 2, cb = (b0 + b1) / 2;
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+      const u = a0 + (a1 - a0) * (i + .5) / N, v = b0 + (b1 - b0) * (j + .5) / N;
+      if (delante.some(q => u > q[H] && u < q[H] + q[DIM[H]] && v > q[Vv] && v < q[Vv] + q[DIM[Vv]])) continue;
+      n++; const d = Math.hypot(u - ca, v - cb); if (!best || d < best.d) best = { u, v, d };
+    }
+    const proy = (a1 - a0) * (b1 - b0);
+    if (!oculta || proy > oculta.proy) oculta = { proy, vista: t, x: Math.round((T.hs > 0 ? ca : -ca) * 10000) / 1000, y: Math.round((T.vs > 0 ? cb : -cb) * 10000) / 1000 };
+    if (!best || n / (N * N) < .15) continue; // casi tapada en esta vista
+    const area = proy * n / (N * N);
+    if (!mejor || area > mejor.area * 1.0001) mejor = { area, vista: t, x: Math.round((T.hs > 0 ? best.u : -best.u) * 10000) / 1000, y: Math.round((T.vs > 0 ? best.v : -best.v) * 10000) / 1000 };
+  }
+  const r = mejor || oculta; // si no se ve bien en ninguna vista, apunta a su centro en la vista donde es más grande
+  return r && { vista: r.vista, x: r.x, y: r.y, oculta: !mejor };
 }
 let mcVentana = null, mcPaquete = null;
 function descargarPaqueteMC() {

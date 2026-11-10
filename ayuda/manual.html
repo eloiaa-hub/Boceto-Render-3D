@@ -363,7 +363,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 <h2 id="mueblecad">15. Plano de taller en MUEBLECAD 2D</h2>
 <p><b>▱ MUEBLECAD</b> (barra superior) abre el mueble en <b>MUEBLECAD 2D</b>, el programa de dibujo técnico para muebles que va dentro de la carpeta (<code>assets/mueblecad/</code>). Se abre en otra pestaña, con dos láminas A3 ya preparadas:</p>
 <ul>
-  <li><b>Conjunto</b>: alzado, planta y perfil izquierdo en sistema europeo, con las aristas ocultas en discontinua, el nombre de cada vista y la apertura de las puertas que tengan movimiento. La escala normalizada (1:5, 1:10, 1:20…) se elige sola.</li>
+  <li><b>Conjunto</b>: alzado, planta y perfil izquierdo en sistema europeo, con las aristas ocultas en discontinua, el nombre de cada vista, la apertura de las puertas que tengan movimiento y una <b>marca con el número de cada pieza</b>, el mismo de la lista de piezas. La escala normalizada (1:5, 1:10, 1:20…) se elige sola.</li>
   <li><b>Piezas</b>: cada tablero desplegado por su cara, como <b>pieza de tablero</b> con su nombre, material, grueso, veta y cantos, y la lista de piezas, que se actualiza sola. Las piezas iguales (mismo nombre, material y medidas) van juntas, con su cantidad.</li>
 </ul>
 <p>En MUEBLECAD se añaden los <b>herrajes y taladros</b> (sistema 32, bisagras, Minifix, galletas…), se acota, se comprueba y se saca el <b>despiece</b> (también en CSV para el Anidador) y el PDF a escala.</p>
@@ -378,8 +378,9 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
   <tr><td>Cantos</td><td>Los tableros con alma y canto («a juego» u «otro») llevan canto de 1 mm en todo el contorno; se cambia lado a lado en MUEBLECAD. La madera maciza, sin canto.</td></tr>
   <tr><td>Contorno</td><td>Las piezas con contorno se despliegan con él y sus huecos, con los arcos exactos si se dibujó a mano.</td></tr>
   <tr><td>Cristal</td><td>Material «Vidrio», sin veta ni canto.</td></tr>
+  <tr><td>Herrajes de metal</td><td>No pasan como piezas, pero <b>dejan sus taladros</b> en los tableros que tocan: tiradores (dos pasantes Ø4 a la distancia normalizada), bisagras de cazoleta (Ø35 y sus tornillos en la puerta, placa Ø5 en el costado), guías de cajón (tornillos en el costado y en el lateral del cajón) y patas de metal. Son medidas orientativas: revísalas en MUEBLECAD.</td></tr>
 </table>
-<div class="caja">No pasan a MUEBLECAD los metales (tiradores, guías) ni las piezas cilíndricas: se avisa de cuáles son. Es una <b>copia</b>: si cambias el mueble en Boceto, vuelve a enviarlo (lo que añadiste en MUEBLECAD no se conserva). Si el navegador bloquea la pestaña nueva, <b>📋 Despiece → Para MUEBLECAD</b> guarda el mueble en un archivo que se abre en MUEBLECAD con «📂 Abrir».</div>
+<div class="caja">Los metales (tiradores, guías, bisagras) y las piezas cilíndricas no pasan como piezas: se avisa de cuáles son. Es una <b>copia</b>: si cambias el mueble en Boceto, vuelve a enviarlo (lo que añadiste en MUEBLECAD no se conserva). Si el navegador bloquea la pestaña nueva, <b>📋 Despiece → Para MUEBLECAD</b> guarda el mueble en un archivo que se abre en MUEBLECAD con «📂 Abrir».</div>
 
 <h2 id="archivos">16. Guardar, abrir, despiece y Anidador</h2>
 <ul>
