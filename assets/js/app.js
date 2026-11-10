@@ -2826,7 +2826,8 @@ function exportarAnidador() {
    MUEBLECAD crea una lámina de conjunto y otra con las piezas desplegadas, listas para herrajes, cotas y despiece. */
 const MC_URL = 'assets/mueblecad/mueblecad.html';
 const PAT_ALMA = { macizo: 'MACIZO', aglomerado: 'AGLOMERADO', mdf: 'MDF', contrachapado: 'CONTRACHAPADO' };
-function paqueteMueblecad() {
+function paqueteMueblecad(uniones) {
+  uniones = uniones || tipoUniones();
   const mm = v => Math.round(v * 10000) / 1000;
   const vistas = {};
   ['alzado', 'planta', 'perfil'].forEach(t => {
@@ -2835,6 +2836,7 @@ function paqueteMueblecad() {
   });
   const piezas = [], fuera = [], vis = P.piezas.filter(p => p.visible);
   const esMetal = p => ['metal', 'metalpint'].includes(infoMaterial(p.material).tipo);
+  const U = calcularUniones(vis.filter(p => !esMetal(p) && p.forma !== 'cilindro' && infoMaterial(p.material).tipo !== 'cristal'), uniones);
   for (const p of vis) {
     const m = infoMaterial(p.material);
     if (esMetal(p) || p.forma === 'cilindro') { fuera.push(p.nombre); continue; }
@@ -2855,7 +2857,7 @@ function paqueteMueblecad() {
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
     piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, cantosLado, conts, girar: false,
-      tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))), marcaV: anclaMarca(p, vis) });
+      tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []), marcaV: anclaMarca(p, vis) });
   }
   const aperturas = [];
   for (const [g, G] of Object.entries(P.grupos)) {
@@ -2863,7 +2865,7 @@ function paqueteMueblecad() {
     const L = piezasGrupo(g).filter(p => p.visible); if (!L.length) continue;
     const b = bbox(L); aperturas.push({ tipo: G.mov.tipo, x0: mm(b.x0), y0: mm(b.y0), x1: mm(b.x1), y1: mm(b.y1) });
   }
-  return { tipo: 'boceto-mueble', v: 2, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera };
+  return { tipo: 'boceto-mueble', v: 3, uniones, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera };
 }
 /* ---------- herrajes → taladros en la pieza (para MUEBLECAD) ----------
    Cada pieza de metal que toca la cara de un tablero deja sus agujeros, según su nombre. Medidas habituales,
@@ -2910,6 +2912,54 @@ function taladrosHerrajes(p, th, eL, eA, metales) {
   }
   return O;
 }
+/* ---------- uniones entre tableros: clavijas o Minifix donde el canto de una pieza toca la cara de otra ----------
+   Devuelve un Map pieza → taladros (mm, en coordenadas de su cara, como taladrosHerrajes). Los agujeros en el canto
+   llevan tipo 'canto' y la dirección hacia dentro de la pieza. Medidas habituales, orientativas. */
+function tipoUniones() { try { return localStorage.getItem('boceto3d.uniones') || 'clavijas'; } catch (e) { return 'clavijas'; } }
+function calcularUniones(tableros, tipo) {
+  const out = new Map(); if (tipo === 'ninguna') return out;
+  const tol = .05, G = p => p[DIM[ejeGrosor(p)]] * 10;
+  const ejes = p => { const th = ejeGrosor(p), md = medidasTablero(p), eL = md.ejeL; return { th, eL, eA: 'xyz'.split('').find(e => e !== th && e !== eL) }; };
+  const caraXY = (p, w) => { const E = ejes(p); return { a: Math.round((w[E.eL] - p[E.eL] * 10) * 100) / 100, b: Math.round((w[E.eA] - p[E.eA] * 10) * 100) / 100 }; };
+  const push = (p, t) => { if (!out.has(p)) out.set(p, []); out.get(p).push(t); };
+  const c = bbox(tableros), cen = { x: (c.x0 + c.x1) * 5, y: (c.y0 + c.y1) * 5, z: (c.z0 + c.z1) * 5 };
+  const movil = p => p.grupo && P.grupos[p.grupo] && P.grupos[p.grupo].mov && P.grupos[p.grupo].mov.tipo !== 'ninguno';
+  let n = 0;
+  for (const A of tableros) for (const B of tableros) {
+    if (A === B) continue;
+    const thA = ejeGrosor(A), thB = ejeGrosor(B), k = thA;            // A: la pieza que recibe en su cara; B: la que llega con su canto
+    if (thB === k || G(A) < 10 || G(B) < 10) continue;               // traseras y fondos finos, sin uniones
+    if (A.grupo !== B.grupo && (movil(A) || movil(B))) continue;      // puertas y cajones no se unen al cuerpo
+    let lado = 0;
+    if (Math.abs(A[k] + A[DIM[k]] - B[k]) < tol) lado = 1; else if (Math.abs(B[k] + B[DIM[k]] - A[k]) < tol) lado = -1; else continue;
+    const J = 'xyz'.split('').find(e => e !== k && e !== thB);
+    const j0 = Math.max(A[J], B[J]) * 10, j1 = Math.min(A[J] + A[DIM[J]], B[J] + B[DIM[J]]) * 10;
+    const t0 = Math.max(A[thB], B[thB]) * 10, t1 = Math.min(A[thB] + A[DIM[thB]], B[thB] + B[DIM[thB]]) * 10;
+    if (j1 - j0 < 25 || t1 - t0 < G(B) - .5) continue;               // el canto de B tiene que apoyar entero
+    const plano = (lado > 0 ? A[k] + A[DIM[k]] : A[k]) * 10, tc = (B[thB] * 10) + G(B) / 2, L = j1 - j0;
+    const nP = L < 100 ? 1 : Math.max(2, Math.ceil((L - 64) / 192) + 1);
+    const pos = nP === 1 ? [(j0 + j1) / 2] : Array.from({ length: nP }, (_, i) => j0 + 32 + (L - 64) * i / (nP - 1));
+    const caraA = lado > 0 ? 'A' : 'B', dirB = lado;                  // B queda al lado «lado» de A; su interior va en ese sentido de k
+    const id = 'u' + (++n);
+    pos.forEach((j, i) => {
+      const minifix = tipo === 'minifix' && (i === 0 || i === pos.length - 1) && L >= 200;
+      const w = { [J]: j, [thB]: tc, [k]: plano };
+      const fa = caraXY(A, w), fb = caraXY(B, w), Eb = ejes(B);
+      // dirección hacia dentro de B, en su cara
+      const dir = { x: Eb.eL === k ? dirB : 0, y: Eb.eA === k ? dirB : 0 };
+      if (minifix) {
+        push(A, { a: fa.a, b: fa.b, d: 5, prof: Math.min(12, G(A) - 3), cara: caraA, nom: 'Minifix (perno)', par: id });
+        push(B, { tipo: 'canto', a: fb.a, b: fb.b, dir, d: 8, prof: 34, nom: 'Minifix (perno)', par: id });
+        const wc = Object.assign({}, w, { [k]: plano + dirB * 34 }), fc = caraXY(B, wc);
+        push(B, { a: fc.a, b: fc.b, d: 15, prof: Math.min(13, G(B) - 3), cara: cen[thB] > tc ? 'A' : 'B', nom: 'Minifix (excéntrica)', par: id });
+      } else {
+        push(A, { a: fa.a, b: fa.b, d: 8, prof: Math.min(12, G(A) - 4), cara: caraA, nom: 'Clavija Ø8', par: id });
+        push(B, { tipo: 'canto', a: fb.a, b: fb.b, dir, d: 8, prof: 25, nom: 'Clavija Ø8', par: id });
+      }
+    });
+  }
+  return out;
+}
 /* ---------- marca de pieza: punto visible de la pieza en la vista donde más se ve ---------- */
 function anclaMarca(p, todas) {
   let mejor = null, oculta = null;
@@ -2942,7 +2992,14 @@ function descargarPaqueteMC() {
 }
 function abrirMueblecad() {
   if (!P.piezas.some(p => p.visible)) return aviso('No hay piezas visibles');
-  mcPaquete = paqueteMueblecad();
+  const t = tipoUniones();
+  modal('Plano en MUEBLECAD 2D', `<p>Se abre MUEBLECAD con las vistas de conjunto y las piezas desplegadas, con los taladros de los herrajes.</p>
+    <label class="fila">Uniones entre tableros <select id="mcUni">${[['clavijas', 'Clavijas Ø8'], ['minifix', 'Minifix en los extremos y clavijas'], ['ninguna', 'Ninguna']].map(([v, n]) => `<option value="${v}" ${v === t ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    <p class="nota">Donde el canto de un tablero toca la cara de otro (laterales con techo, suelo, baldas…), se taladran las dos piezas a la vez, en posiciones que casan. No se unen las traseras ni los fondos finos, ni las puertas y cajones al cuerpo. Medidas orientativas: revísalas en MUEBLECAD.</p>`,
+    [{ txt: 'Cancelar' }, { txt: '▱ Abrir en MUEBLECAD', primario: true, fn: () => { const v = $('#mcUni').value; try { localStorage.setItem('boceto3d.uniones', v); } catch (e) {} enviarMueblecad(v); } }]);
+}
+function enviarMueblecad(uniones) {
+  mcPaquete = paqueteMueblecad(uniones);
   if (!mcPaquete.piezas.length) return aviso('No hay tableros: los metales y los cilindros no pasan a MUEBLECAD');
   mcVentana = window.open(MC_URL + '?desde=boceto', '_blank');
   const fallo = () => modal('MUEBLECAD 2D', `<p>No se ha podido abrir MUEBLECAD en otra pestaña${mcVentana ? ' o no responde' : ' (el navegador ha bloqueado la ventana)'}.</p>
