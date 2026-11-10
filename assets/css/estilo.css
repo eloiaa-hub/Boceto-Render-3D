@@ -192,3 +192,4 @@ input:disabled,select:disabled{opacity:.55}
 .ejemplos button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 12px}
 .ejemplos button small{opacity:.75;font-weight:400}
 .ejemplos button:hover{border-color:var(--acento)}
+.barra .ir-portada{text-decoration:none;color:inherit;opacity:.7;font-size:17px;margin-right:2px}.barra .ir-portada:hover{opacity:1}

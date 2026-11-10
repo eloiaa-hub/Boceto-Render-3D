@@ -3,10 +3,131 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="0; url=Boceto_Render3D.html">
-<title>Boceto a Render 3D</title>
+<title>Boceto a Render 3D y MUEBLECAD 2D — Por Eloi A.A.</title>
+<meta name="description" content="Dos programas para diseñar muebles en el navegador, sin instalar nada y sin internet: del boceto a la imagen realista y al plano de taller.">
+<style>
+:root{--fondo:#f4f2ee;--panel:#ffffff;--texto:#23262b;--suave:#626872;--borde:#dedad3;--acento:#005A9C;--acento2:#a8743f;--sombra:0 10px 30px rgba(30,25,15,.10)}
+@media (prefers-color-scheme:dark){:root{--fondo:#15181c;--panel:#1f2329;--texto:#e8e9ec;--suave:#9aa1ab;--borde:#323842;--acento:#4ea1e0;--acento2:#d9a46c;--sombra:0 10px 30px rgba(0,0,0,.35)}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--fondo);color:var(--texto);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif}
+a{color:var(--acento)}
+.envoltura{max-width:1120px;margin:0 auto;padding:0 20px}
+header{padding:56px 0 34px}
+.firma{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--suave);font-weight:600}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:10px 0 14px;font-weight:700;letter-spacing:-.01em}
+h1 span{color:var(--acento2)}
+.entrada{font-size:18px;color:var(--suave);max-width:720px}
+.etiquetas{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.etiquetas span{font-size:13px;border:1px solid var(--borde);background:var(--panel);border-radius:20px;padding:3px 12px;color:var(--suave)}
+.programas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:10px 0 50px}
+.prog{background:var(--panel);border:1px solid var(--borde);border-radius:14px;overflow:hidden;box-shadow:var(--sombra);display:flex;flex-direction:column}
+.prog figure{aspect-ratio:16/9;overflow:hidden;border-bottom:1px solid var(--borde);background:#e9e6e0}
+.prog img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.prog .cuerpo{padding:22px 24px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
+.prog h2{font-size:24px;line-height:1.2;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.vers{font-size:12px;font-weight:700;color:var(--acento);background:color-mix(in srgb,var(--acento) 12%,transparent);border-radius:10px;padding:1px 8px}
+.prog p{color:var(--suave)}
+.prog ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.prog li{padding-left:18px;position:relative}
+.prog li::before{content:"";position:absolute;left:3px;top:.62em;width:7px;height:7px;border-radius:2px;background:var(--acento2)}
+.botones{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:8px}
+.bt{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600;font-size:15px;border-radius:8px;padding:9px 16px;border:1px solid var(--borde);color:var(--texto);background:var(--fondo)}
+.bt:hover{border-color:var(--acento)}
+.bt.prim{background:var(--acento);border-color:var(--acento);color:#fff}
+.bt.prim:hover{filter:brightness(1.08)}
+section.flujo{margin:0 0 50px}
+h3{font-size:20px;margin-bottom:16px}
+.pasos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:p}
+.paso{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px;counter-increment:p}
+.paso::before{content:counter(p);display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--acento2);color:#fff;font-weight:700;font-size:14px;margin-bottom:8px}
+.paso b{display:block;margin-bottom:4px}
+.paso p{font-size:14.5px;color:var(--suave)}
+.paso small{display:block;margin-top:6px;font-size:12.5px;color:var(--acento);font-weight:600}
+.descarga{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:22px 24px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:46px}
+.descarga p{color:var(--suave);max-width:640px}
+footer{border-top:1px solid var(--borde);padding:22px 0 40px;font-size:14px;color:var(--suave)}
+footer .envoltura{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (max-width:860px){.programas{grid-template-columns:1fr}.pasos{grid-template-columns:repeat(2,minmax(0,1fr))}header{padding:36px 0 24px}}
+@media (max-width:520px){.pasos{grid-template-columns:1fr}.prog .cuerpo{padding:18px}}
+</style>
 </head>
-<body style="font-family:system-ui,sans-serif;padding:2em">
-<p><a href="Boceto_Render3D.html">Abrir Boceto a Render 3D</a> · <a href="ayuda/manual.html">Manual</a></p>
+<body>
+<header>
+  <div class="envoltura">
+    <div class="firma">Por Eloi A.A. · Carpintería y mueble</div>
+    <h1>Del boceto a mano<br>al <span>render</span> y al <span>plano de taller</span></h1>
+    <p class="entrada">Dos programas que trabajan juntos para diseñar muebles en el navegador. Se abren con doble clic, sin instalar nada y sin conexión a internet.</p>
+    <div class="etiquetas"><span>Chrome, Edge o Firefox</span><span>Sin internet</span><span>Sin inteligencia artificial</span><span>Software libre</span></div>
+  </div>
+</header>
+
+<main class="envoltura">
+  <div class="programas">
+    <article class="prog">
+      <figure><img src="ayuda/img/render_salon.png" alt="Render de un mueble hecho con Boceto a Render 3D"></figure>
+      <div class="cuerpo">
+        <h2>Boceto a Render 3D <span class="vers">v3.4</span></h2>
+        <p>Calca el boceto de un mueble pieza a pieza en alzado, planta y perfil, y obtén el modelo 3D con madera, luz y sombras.</p>
+        <ul>
+          <li>Plantillas de taller: cuerpo, cajón completo, puertas, bisagras, patas y tiradores</li>
+          <li>Maderas, melaminas, lacados, metales y cristal, con tipo de tablero y cantos</li>
+          <li>Puertas y cajones que se abren y vista explosionada</li>
+          <li>Imagen realista hasta 4K y lámina acotada en PDF y DXF</li>
+          <li>Siete muebles de ejemplo para practicar</li>
+        </ul>
+        <div class="botones">
+          <a class="bt prim" href="Boceto_Render3D.html">Abrir el programa</a>
+          <a class="bt" href="ayuda/manual.html">Manual</a>
+          <a class="bt" href="ayuda/manual.pdf">PDF</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="prog">
+      <figure><img src="ayuda/img/portada_mueblecad.png" alt="Lateral de un mueble con sistema 32 y cotas en MUEBLECAD 2D" style="object-position:left top"></figure>
+      <div class="cuerpo">
+        <h2>MUEBLECAD 2D <span class="vers">v4</span></h2>
+        <p>Un CAD 2D pensado para el mueble: dibujo técnico con capas, cotas y láminas, y piezas de tablero que saben su material, grueso, veta y cantos.</p>
+        <ul>
+          <li>Dibujo y edición de CAD, también como programa vectorial</li>
+          <li>Herrajes y taladros: sistema 32, bisagras, Minifix, galletas…</li>
+          <li>Despiece con m² y metros de canto, y CSV para el Anidador</li>
+          <li>Cotas que se pueden cambiar, cortes, detalles y plantilla del centro</li>
+          <li>DXF de ida y vuelta y PDF a escala con cajetín</li>
+        </ul>
+        <div class="botones">
+          <a class="bt prim" href="assets/mueblecad/mueblecad.html">Abrir el programa</a>
+          <a class="bt" href="assets/mueblecad/manual_mueblecad.html">Manual</a>
+          <a class="bt" href="assets/mueblecad/manual_mueblecad.pdf">PDF</a>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <section class="flujo">
+    <h3>Cómo trabajan juntos</h3>
+    <div class="pasos">
+      <div class="paso"><b>Calca el boceto</b><p>Pon tu dibujo de fondo en una vista, escálalo y dibuja encima las piezas del mueble.</p><small>Boceto a Render 3D</small></div>
+      <div class="paso"><b>Míralo en 3D</b><p>Elige maderas y acabados, abre puertas y cajones, y saca la imagen final.</p><small>Boceto a Render 3D</small></div>
+      <div class="paso"><b>Pásalo a plano</b><p>El botón «▱ MUEBLECAD» crea las vistas de conjunto y todas las piezas desplegadas.</p><small>MUEBLECAD 2D</small></div>
+      <div class="paso"><b>Prepara el taller</b><p>Añade herrajes y taladros, acota, comprueba y saca el despiece y el PDF a escala.</p><small>MUEBLECAD 2D</small></div>
+    </div>
+  </section>
+
+  <div class="descarga">
+    <div>
+      <h3 style="margin-bottom:6px">Para usarlos sin internet</h3>
+      <p>Descarga la carpeta completa, descomprímela y abre <b>index.html</b> o directamente <b>Boceto_Render3D.html</b>. Copia siempre la carpeta entera: los programas necesitan <code>assets</code> y <code>ayuda</code>.</p>
+    </div>
+    <a class="bt prim" href="https://github.com/eloiaa-hub/Boceto-Render-3D/archive/refs/heads/main.zip">Descargar (ZIP)</a>
+  </div>
+</main>
+
+<footer>
+  <div class="envoltura">
+    <span>Programas: EUPL-1.2 · Manuales: CC BY-SA 4.0 · Three.js: MIT</span>
+    <span><a href="https://github.com/eloiaa-hub/Boceto-Render-3D">Código en GitHub</a> · <a href="NOVEDADES.md">Novedades</a></span>
+  </div>
+</footer>
 </body>
 </html>
