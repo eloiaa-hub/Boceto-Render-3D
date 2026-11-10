@@ -1,10 +1,12 @@
 
 /* ===================== DIBUJAR EN EL CALCADOR =====================
-   La copia del Calcador (assets/calcador/calcador.html) se abre en modo «Pieza 3D» dentro de una ventana.
+   La copia de MUEBLECAD 2D (assets/mueblecad/mueblecad.html) se abre en modo «Pieza 3D» dentro de una ventana.
+   (Los nombres «calc…» y la clave «calcador» de los datos vienen de cuando se usaba el Calcador: se mantienen
+   para que los proyectos guardados sigan abriéndose; el formato de los contornos es el mismo.)
    Se le manda la pieza (medidas en mm de la vista donde se dibuja), su contorno si ya lo tiene y el boceto de esa vista;
    devuelve sus contornos con los arcos exactos (pts + bulge). El mayor es la pieza; los de dentro, sus huecos;
    otros contornos sueltos se convierten en piezas nuevas. */
-const CALC_URL = 'assets/calcador/calcador.html?modo=pieza3d';
+const CALC_URL = 'assets/mueblecad/mueblecad.html?modo=pieza3d';
 let calcSesion = null;
 
 function calcPoligonos(calc) { // contornos cerrados del Calcador → polígonos en mm (y hacia arriba)
@@ -35,7 +37,7 @@ function abrirCalcador(p, plano, nueva) {
   calcSesion = { pid: p.id, nueva: !!nueva, plano, base: nueva ? p : null, off, enviado: false,
     datos: { tipo: 'pieza3d-datos', nombre: p.nombre, vista: T0.nombre, ancho, alto, calcador: calc, fondo: bocetoParaCalc(p, plano) } };
   const v = $('#calcVentana'); v.classList.remove('oculto');
-  const f = document.createElement('iframe'); f.id = 'calcFrame'; f.src = CALC_URL; f.title = 'Calcador';
+  const f = document.createElement('iframe'); f.id = 'calcFrame'; f.src = CALC_URL; f.title = 'MUEBLECAD 2D';
   $('#calcCaja').innerHTML = ''; $('#calcCaja').appendChild(f);
   setTimeout(() => { if (calcSesion && !calcSesion.enviado) $('#calcAviso').classList.remove('oculto'); }, 6000);
 }
@@ -86,7 +88,7 @@ function aplicarCalc(s, calc, nombre) {
   if (nombre && s.nueva && nombre !== 'Pieza a mano') p.nombre = nombre;
   sel = new Set(nuevas.map(q => q.id)); cambio(true);
   if (s.nueva) encuadrarTodo();
-  aviso(nuevas.length > 1 ? `Contorno aplicado; ${nuevas.length - 1} contorno(s) más, como piezas nuevas` : 'Contorno del Calcador aplicado');
+  aviso(nuevas.length > 1 ? `Contorno aplicado; ${nuevas.length - 1} contorno(s) más, como piezas nuevas` : 'Contorno aplicado');
 }
 
 // Calcador → Anidador: los contornos con sus arcos, escalados a las medidas actuales de la pieza
@@ -114,5 +116,5 @@ function piezaAMano() {
   o[DIM[T0.h]] = 40; o[DIM[T0.v]] = 30; o[DIM[T0.prof]] = g;
   o[T0.h] = hay ? r1((T0.h === 'x' ? bb.x1 : bb.z1) + 10) : 0; o[T0.v] = 0; o[T0.prof] = 0;
   abrirCalcador(nuevaPieza(o), plano, true);
-  aviso('Dibuja la pieza en el Calcador (vista ' + T0.nombre.toLowerCase() + ')');
+  aviso('Dibuja la pieza en MUEBLECAD 2D (vista ' + T0.nombre.toLowerCase() + ')');
 }

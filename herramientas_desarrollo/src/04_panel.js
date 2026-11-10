@@ -275,12 +275,12 @@ function abrirContorno() {
   let importado = null;
   const tipos = [['rect', 'Rectángulo (sin contorno)'], ['redondeado', 'Esquinas redondeadas'], ['chaflan', 'Esquinas achaflanadas'], ['trapecio', 'Trapecio (pata afilada, lateral inclinado)'], ['arco', 'Lado superior en arco'], ['unero', 'Uñero (tirador mecanizado arriba)'], ['importar', 'Desde un DXF o SVG…']];
   const plano0 = p.plano || planoNatural(p);
-  if (tieneContorno(p) && p.contorno.tipo === 'calcador') tipos.splice(1, 0, ['calcador', 'Dibujado en el Calcador (sin cambios)']);
+  if (tieneContorno(p) && p.contorno.tipo === 'calcador') tipos.splice(1, 0, ['calcador', 'Dibujado a mano (sin cambios)']);
   modal('Contorno de «' + p.nombre + '»', formulario([
     { id: 'plano', et: 'Se dibuja en la vista', v: plano0, sel: [['alzado', 'Alzado (grosor en Z)'], ['planta', 'Planta (grosor en Y)'], ['perfil', 'Perfil (grosor en X)']] },
     { id: 'tipo', et: 'Forma', v: p.contorno && p.contorno.tipo || (tieneContorno(p) ? 'importar' : 'redondeado'), sel: tipos }]) +
     `<div id="cParams"></div><canvas id="cPrev" class="prevc" width="440" height="220"></canvas>
-     <p class="nota">Para dibujarlo a mano, con rectas, arcos y cotas, usa <b>🖊 Calcador…</b>. El contorno se estira con la pieza si luego cambias sus medidas. El grosor (3.ª medida) se extruye. Los cantos se redondean con «Canto redondeado».</p>`, [
+     <p class="nota">Para dibujarlo a mano, con rectas, arcos y cotas, usa <b>🖊 Dibujar…</b> (MUEBLECAD 2D). El contorno se estira con la pieza si luego cambias sus medidas. El grosor (3.ª medida) se extruye. Los cantos se redondean con «Canto redondeado».</p>`, [
     { txt: 'Cancelar' },
     { txt: 'Aplicar', primario: true, fn: () => {
       const t = fv('tipo'), plano = fv('plano'), cont = calcular();

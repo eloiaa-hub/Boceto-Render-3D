@@ -1,4 +1,69 @@
 
+/* ===================== MUEBLECAD 2D: PLANO DE TALLER ===================== */
+/* Se manda el mueble a MUEBLECAD 2D (assets/mueblecad/mueblecad.html): las vistas con aristas visibles y ocultas
+   (en mm, Y hacia arriba) y cada pieza de tablero con su material, alma, grueso, veta, cantos y contorno.
+   MUEBLECAD crea una lámina de conjunto y otra con las piezas desplegadas, listas para herrajes, cotas y despiece. */
+const MC_URL = 'assets/mueblecad/mueblecad.html';
+const PAT_ALMA = { macizo: 'MACIZO', aglomerado: 'AGLOMERADO', mdf: 'MDF', contrachapado: 'CONTRACHAPADO' };
+function paqueteMueblecad() {
+  const mm = v => Math.round(v * 10000) / 1000;
+  const vistas = {};
+  ['alzado', 'planta', 'perfil'].forEach(t => {
+    const T = TIPOS[t], ar = aristasVista(T), mp = ([a, b]) => [mm(T.hs > 0 ? a : -a), mm(T.vs > 0 ? b : -b)];
+    vistas[t] = { nombre: T.nombre, vis: ar.vis.map(s => s.map(mp)), ocu: ar.ocu.map(s => s.map(mp)) };
+  });
+  const piezas = [], fuera = [];
+  for (const p of P.piezas) {
+    if (!p.visible) continue;
+    const m = infoMaterial(p.material);
+    if (['metal', 'metalpint'].includes(m.tipo) || p.forma === 'cilindro') { fuera.push(p.nombre); continue; }
+    const cristal = m.tipo === 'cristal', nuc = nucleoDe(p), md = medidasTablero(p);
+    const base = m.tipo === 'lacado' ? 'Lacado ' + p.color : m.nombre;
+    const mat = { n: cristal ? 'Vidrio' : base + (nuc === 'macizo' ? ' macizo' : ' · ' + ALMAS[nuc].nombre.toLowerCase()), pat: cristal ? 'VIDRIO' : PAT_ALMA[nuc] || 'AGLOMERADO', veta: md.veta && !cristal };
+    const canto = !cristal && nuc !== 'macizo' && p.cantos !== 'sin' ? 1 : 0;
+    let conts = null, girar = false;
+    if (tieneContorno(p) && TIPOS[p.plano].prof === ejeGrosor(p)) {
+      const Tp = TIPOS[p.plano], c = p.contorno, ka = p[DIM[Tp.h]] / c.cw * 10, kb = p[DIM[Tp.v]] / c.ch * 10;
+      const conv = an => ({ pts: an.map(([u, v]) => ({ x: Math.round(u * ka * 1000) / 1000, y: Math.round(v * kb * 1000) / 1000 })), b: an.map(() => 0) });
+      conts = contornosCalcadorMM(p) || [conv(c.ext), ...(c.huecos || []).map(conv)];
+      girar = md.ejeL !== Tp.h;
+    }
+    const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
+    piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, conts, girar });
+  }
+  const aperturas = [];
+  for (const [g, G] of Object.entries(P.grupos)) {
+    if (!G.mov || !['izq', 'der', 'arriba', 'abajo'].includes(G.mov.tipo)) continue;
+    const L = piezasGrupo(g).filter(p => p.visible); if (!L.length) continue;
+    const b = bbox(L); aperturas.push({ tipo: G.mov.tipo, x0: mm(b.x0), y0: mm(b.y0), x1: mm(b.x1), y1: mm(b.y1) });
+  }
+  return { tipo: 'boceto-mueble', v: 1, app: 'Boceto a Render 3D', versionPrograma: VERSION, nombre: P.nombre || 'mueble', vistas, piezas, aperturas, fuera };
+}
+let mcVentana = null, mcPaquete = null;
+function descargarPaqueteMC() {
+  const pq = paqueteMueblecad();
+  descargar(((P.nombre || 'mueble') + ' - para MUEBLECAD.json').replace(/[\\/:*?"<>|]/g, ''), new Blob([JSON.stringify(pq)], { type: 'application/json' }));
+  aviso('Ábrelo en MUEBLECAD 2D con «📂 Abrir»');
+}
+function abrirMueblecad() {
+  if (!P.piezas.some(p => p.visible)) return aviso('No hay piezas visibles');
+  mcPaquete = paqueteMueblecad();
+  if (!mcPaquete.piezas.length) return aviso('No hay tableros: los metales y los cilindros no pasan a MUEBLECAD');
+  mcVentana = window.open(MC_URL + '?desde=boceto', '_blank');
+  const fallo = () => modal('MUEBLECAD 2D', `<p>No se ha podido abrir MUEBLECAD en otra pestaña${mcVentana ? ' o no responde' : ' (el navegador ha bloqueado la ventana)'}.</p>
+    <p class="nota">Comprueba que está el archivo <b>assets/mueblecad/mueblecad.html</b>. También puedes guardar el mueble y abrirlo en MUEBLECAD con «📂 Abrir».</p>`,
+    [{ txt: 'Cerrar' }, { txt: '⬇ Guardar para MUEBLECAD', primario: true, fn: descargarPaqueteMC }]);
+  if (!mcVentana) return fallo();
+  aviso('Abriendo el plano en MUEBLECAD 2D…');
+  setTimeout(() => { if (mcPaquete && !mcPaquete.enviado) fallo(); }, 8000);
+}
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!mcVentana || e.source !== mcVentana || !d || typeof d !== 'object') return;
+  if (d.tipo === 'mueblecad-listo' && mcPaquete) { mcVentana.postMessage({ tipo: 'boceto-mueble-envio', paquete: mcPaquete }, '*'); mcPaquete.enviado = true; }
+});
+$('#bMueblecad').onclick = abrirMueblecad;
+
 /* ===================== ARCHIVOS ===================== */
 function serializar() { return JSON.stringify(P); }
 let tLocal;
@@ -41,13 +106,25 @@ $('#bAbrir').onclick = async () => {
   try { const o = JSON.parse(f.datos); if (!Array.isArray(o.piezas)) throw 0; await cargarProyecto(o); aviso('Proyecto abierto: ' + f.nombre); }
   catch (e) { aviso('Ese archivo no es un proyecto de Boceto a Render 3D'); }
 };
-$('#bEjemplo').onclick = () => cargarProyecto(JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
+function listaEjemplos() {
+  return [{ clave: 'mesita', nombre: 'mesita de noche', desc: 'Roble macizo, dos cajones completos, tapa con las esquinas redondeadas y su boceto de fondo', proyecto: window.EJEMPLO_MESITA }]
+    .concat(window.EJEMPLOS_MUEBLES || []).filter(e => e.proyecto);
+}
+function abrirEjemplo(e) { cargarProyecto(JSON.parse(JSON.stringify(e.proyecto))).then(() => { encuadrarTodo(); aviso('Ejemplo: ' + e.nombre); }); }
+$('#bEjemplo').onclick = () => {
+  const L = listaEjemplos();
+  const html = `<p class="nota">Se cargan en lugar del proyecto actual (guárdalo antes si lo necesitas). Puedes cambiarlos, renderizarlos o pasarlos a MUEBLECAD.</p>
+    <div class="ejemplos">${L.map((e, i) => `<button data-ej="${i}"><b>${esc(e.nombre.charAt(0).toUpperCase() + e.nombre.slice(1))}</b><small>${esc(e.desc)} · ${e.proyecto.piezas.length} piezas</small></button>`).join('')}</div>`;
+  modal('Muebles de ejemplo', html, [{ txt: 'Cancelar' }], '560px');
+  $$('#mCuerpo [data-ej]').forEach(b => b.onclick = () => { cerrarModal(); abrirEjemplo(L[+b.dataset.ej]); });
+};
 $('#bDespiece').onclick = () => {
   if (!P.piezas.length) return aviso('No hay piezas');
   modal('Despiece', `<p>¿Para qué lo quieres?</p>
     <p class="nota"><b>Hoja de cálculo</b>: un .csv con todas las piezas (medidas en cm, material, tablero, cantos y grupo).<br>
+    <b>MUEBLECAD</b>: el mueble para abrirlo en MUEBLECAD 2D (vistas y piezas).<br>
     <b>Anidador</b>: un .zip con un .csv por cada tablero (material y grosor, medidas en mm, veta y cantos) y las piezas con contorno como proyectos del Calcador, listos para abrir en el Anidador de la Suite CNC.</p>`, [
-    { txt: 'Cancelar' }, { txt: '📊 Hoja de cálculo (.csv)', fn: despieceCSV }, { txt: '🧩 Para el Anidador (.zip)', primario: true, fn: exportarAnidador }]);
+    { txt: 'Cancelar' }, { txt: '📊 Hoja de cálculo (.csv)', fn: despieceCSV }, { txt: '▱ Para MUEBLECAD (.json)', fn: descargarPaqueteMC }, { txt: '🧩 Para el Anidador (.zip)', primario: true, fn: exportarAnidador }]);
 };
 function despieceCSV() {
   const filas = {};
@@ -55,7 +132,7 @@ function despieceCSV() {
     const m = [p.w, p.h, p.d].sort((a, b) => b - a).map(v => (Math.round(v * 10) / 10).toString().replace('.', ','));
     const nuc = nucleoDe(p), mi = infoMaterial(p.material);
     const obs = [];
-    if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado en el Calcador' }[p.contorno.tipo] || 'contorno') + ')');
+    if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado a mano' }[p.contorno.tipo] || 'contorno') + ')');
     if (p.forma === 'cilindro') obs.push('cilíndrica');
     if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (p.cantos === 'sin' ? ', sin canto' : p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego'));
     const g = p.grupo && P.grupos[p.grupo] ? P.grupos[p.grupo].nombre : '';
@@ -132,6 +209,14 @@ function redimensionar() { Object.values(VISTAS).forEach(ajustarTam); dibujarVis
 new ResizeObserver(redimensionar).observe($('#vistas'));
 window.addEventListener('resize', redimensionar);
 
+/* ---------- barra superior compacta: en pantallas estrechas los botones se quedan en su icono (el nombre sigue en la ayuda emergente) ---------- */
+$$('.barra .grupo button').forEach(b => {
+  const t = b.textContent.trim(), i = t.indexOf(' '); if (i < 1) return;
+  const ico = t.slice(0, i), txt = t.slice(i + 1);
+  b.innerHTML = ''; b.append(ico); const s = document.createElement('span'); s.className = 'txt'; s.textContent = ' ' + txt; b.append(s);
+  if (!b.title) b.title = txt;
+});
+
 /* ---------- apartados plegables y paneles ocultables ---------- */
 (function () {
   let est = {}; try { est = JSON.parse(localStorage.getItem('boceto3d.plegados') || '{}'); } catch (e) {}
@@ -167,6 +252,6 @@ window.addEventListener('resize', redimensionar);
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();

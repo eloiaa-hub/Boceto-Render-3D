@@ -52,11 +52,10 @@ Programa de CAD 2D para muebles, también independiente (`assets/mueblecad/muebl
 |---|---|
 | `Boceto_Render3D.html` | El programa |
 | `index.html` | Portada de los dos programas (también en GitHub Pages) |
-| `assets/js/app.js` | Código del programa (desde la v3.4 se edita directamente: las partes de `herramientas_desarrollo/src` no están en el repositorio) |
+| `assets/js/app.js` | Código del programa (se genera uniendo las partes de `herramientas_desarrollo/src`) |
 | `assets/js/three-bundle.js` | [Three.js](https://threejs.org) empaquetado sin módulos, para funcionar con doble clic |
 | `assets/texturas/` | Maderas y almas de tablero (`texturas.js`); `maderas_aula.js`, las maderas de fotos del aula |
 | `assets/mueblecad/` | MUEBLECAD 2D (`mueblecad.html`) y su manual en HTML y PDF; dibuja los contornos de Boceto (modo «Pieza 3D») y recibe el mueble para el plano de taller |
-| `assets/calcador/calcador.html` | Copia del Calcador de contornos (v130); ya no se usa desde la v3.4 |
 | `assets/ejemplos/` | Muebles de ejemplo: `mesita.js` y `ejemplos.js` (generado con `herramientas_desarrollo/ejemplos.py`) |
 | `ayuda/` | Manual en HTML y PDF |
 | `herramientas_desarrollo/` | Generadores de texturas y ejemplos, empaquetado de Three.js (ver su `LEEME.md`) |

@@ -1555,7 +1555,9 @@ $('#bFlotCerrar').onclick = () => $('#flotante').classList.add('oculto');
 })();
 
 /* ===================== DIBUJAR EN EL CALCADOR =====================
-   La copia del Calcador (assets/calcador/calcador.html) se abre en modo «Pieza 3D» dentro de una ventana.
+   La copia de MUEBLECAD 2D (assets/mueblecad/mueblecad.html) se abre en modo «Pieza 3D» dentro de una ventana.
+   (Los nombres «calc…» y la clave «calcador» de los datos vienen de cuando se usaba el Calcador: se mantienen
+   para que los proyectos guardados sigan abriéndose; el formato de los contornos es el mismo.)
    Se le manda la pieza (medidas en mm de la vista donde se dibuja), su contorno si ya lo tiene y el boceto de esa vista;
    devuelve sus contornos con los arcos exactos (pts + bulge). El mayor es la pieza; los de dentro, sus huecos;
    otros contornos sueltos se convierten en piezas nuevas. */

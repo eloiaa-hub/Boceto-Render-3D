@@ -8,7 +8,7 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const T = window.THREE;
 const CLAVE_LS = 'boceto3d.proyecto';
-const VERSION = '3.3';
+const VERSION = '3.4';
 
 /* ===================== MATERIALES ===================== */
 const MATERIALES = {

@@ -13,7 +13,6 @@ Copia siempre la carpeta completa:
                    cómoda, escritorio y mesa de centro)
   assets/mueblecad copia de MUEBLECAD 2D: dibujar contornos de piezas (modo «Pieza 3D») y plano de taller
                    del mueble (botón ▱ MUEBLECAD), con su manual
-  assets/calcador  copia del Calcador de contornos (v130); ya no se usa desde la v3.4, se puede borrar
   ayuda/           manual
 
 Novedades v2: selección múltiple y por ventana, grupos, repetir en serie, piezas con contorno
