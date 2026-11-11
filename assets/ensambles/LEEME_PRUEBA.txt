@@ -16,3 +16,9 @@ Prueba rápida
   La página ensambles.html también se abre sola (doble clic) con la pata de la mesa como ejemplo.
   5. Oculta una cintura (ojo de la lista) para ver las cajas de la pata en el 3D.
   6. 📋 Despiece y ▱ MUEBLECAD ya llevan el largo de corte y el dibujo de las espigas y las cajas.
+
+Piezas inclinadas, ingletes, tolvas y redondeos (herramientas_desarrollo/src/08c_forma.js)
+  - Mesa de comedor → selecciona las 4 patas → Pieza seleccionada → ⟋ Abrir hacia fuera… (8°, en diagonal).
+  - Tapa → Redondear aristas → «Vistas en planta» 80 mm: esquinas redondeadas.
+  - Insertar → ⌴ Tolva…: cuatro laterales a inglete compuesto.
+  - Selecciona 3 piezas en un vértice (o 3 listones) → ◿ Inglete en esquina.

@@ -15,7 +15,7 @@ function paqueteMueblecad(uniones) {
   });
   const piezas = [], fuera = [], vis = P.piezas.filter(p => p.visible);
   const esMetal = p => ['metal', 'metalpint'].includes(infoMaterial(p.material).tipo);
-  const U = calcularUniones(vis.filter(p => !esMetal(p) && p.forma !== 'cilindro' && infoMaterial(p.material).tipo !== 'cristal'), uniones);
+  const U = calcularUniones(vis.filter(p => !esMetal(p) && p.forma !== 'cilindro' && infoMaterial(p.material).tipo !== 'cristal' && !inclinada(p) && !conCortes(p)), uniones);
   for (const p of vis) {
     const m = infoMaterial(p.material);
     if (esMetal(p) || p.forma === 'cilindro') { fuera.push(p.nombre); continue; }
@@ -35,9 +35,9 @@ function paqueteMueblecad(uniones) {
       conts = loc.map(l => ({ pts: l.pts.map(q => aCara(q.x, q.y)), b: (l.b || []).map(x => espejo ? -x : +x) }));
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
-    const tal = taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []);
+    const tal = inclinada(p) ? [] : taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []);
     piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, cantosLado, conts, girar: false,
-      tal, marcaV: anclaMarca(p, vis), ens: caraEnsamble(p, th, eL, eA), largoCorte: mm(md.L) + sobrelargoDe(p.id), forma: conts ? null : firmaForma(p, tal, th, eL, eA) });
+      tal, marcaV: anclaMarca(p, vis), ens: caraEnsamble(p, th, eL, eA), soloHuella: especial(p), notas: especial(p) ? [inclinada(p) ? 'Inclinada ' + [p.inc.ax, p.inc.az].filter(Boolean).map(a => String(Math.round(Math.abs(a) * 10) / 10).replace('.', ',') + '°').join(' y ') : ''].concat(medidasForma(p) ? medidasForma(p).angulos : []).filter(Boolean) : [], largoCorte: mm(md.L) + sobrelargoDe(p.id), forma: conts ? null : firmaForma(p, tal, th, eL, eA) });
   }
   const aperturas = [];
   for (const [g, G] of Object.entries(P.grupos)) {
@@ -290,11 +290,14 @@ $('#bDespiece').onclick = () => {
 function despieceCSV() {
   const filas = {};
   for (const p of P.piezas) {
-    const ex = sobrelargoDe(p.id) / 10, m = [p.w, p.h, p.d].sort((a, b) => b - a).map((v, i) => (Math.round((v + (i ? 0 : ex)) * 10) / 10).toString().replace('.', ','));
+    const mfo = especial(p) ? medidasForma(p) : null, ex = sobrelargoDe(p.id) / 10, m = (mfo ? mfo.dim.map(v => v / 10) : [p.w, p.h, p.d]).sort((a, b) => b - a).map((v, i) => (Math.round((v + (i ? 0 : ex)) * 10) / 10).toString().replace('.', ','));
     const nuc = nucleoDe(p), mi = infoMaterial(p.material);
     const obs = [];
     if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado a mano' }[p.contorno.tipo] || 'contorno') + ')');
     if (p.forma === 'cilindro') obs.push('cilíndrica');
+    if (inclinada(p)) obs.push('inclinada ' + [p.inc.ax, p.inc.az].filter(Boolean).map(a => String(Math.round(Math.abs(a) * 10) / 10).replace('.', ',') + '°').join(' y '));
+    if (mfo && mfo.angulos.length) obs.push(mfo.angulos.join(', '));
+    if (redondeada(p)) obs.push('aristas redondeadas ' + EJ3.filter(k => p.redondeo[k]).map(k => 'R' + p.redondeo[k].r).join('/'));
     if (ex) obs.push('largo de corte con ' + ensamblesDe(p.id).map(e => e.nombre.toLowerCase()).filter((x, i, l) => l.indexOf(x) === i).join(' y ') + ' (+' + String(Math.round(ex * 100) / 10).replace('.', ',') + ' mm)');
     if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (!llevaCanto(p) ? ', sin canto' : (p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego') + ' ' + resumenCantos(p)));
     const g = p.grupo && P.grupos[p.grupo] ? P.grupos[p.grupo].nombre : '';
@@ -414,6 +417,6 @@ $$('.barra .grupo button').forEach(b => {
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { solidoPieza, cajaReal, dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();

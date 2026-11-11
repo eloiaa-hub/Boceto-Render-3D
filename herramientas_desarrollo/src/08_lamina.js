@@ -5,6 +5,7 @@
 function anillosVista(T, p) { // contornos de la pieza vista desde T, en coordenadas de mundo (a, b)
   const Tp = TIPOS[p.plano];
   if (tieneContorno(p) && Tp.h === T.h && Tp.v === T.v) { const cm = contornoMundo(p); return { anillos: [cm.ext, ...cm.huecos], ocl: cm.ext }; }
+  if (typeof especial === 'function' && especial(p)) { const L = siluetaVista(T, p); return { anillos: [], ocl: L, forma: true }; }
   const r = rectVista(T, p);
   if (p.forma === 'cilindro' && p.eje === T.prof) {
     const ca = (r.a0 + r.a1) / 2, cb = (r.b0 + r.b1) / 2, ra = (r.a1 - r.a0) / 2, rb = (r.b1 - r.b0) / 2, L = [];
@@ -50,9 +51,10 @@ function unirIntervalos(L) {
 }
 // segmentos visibles y ocultos de una vista (en mundo)
 function aristasVista(T) {
-  const piezas = P.piezas.filter(p => p.visible).map(p => Object.assign({ p, c: cercania(T, p) }, anillosVista(T, p)));
+  const piezas = P.piezas.filter(p => p.visible).map(p => Object.assign({ p, c: typeof especial === 'function' && especial(p) ? cercaniaReal(T, p) : cercania(T, p) }, anillosVista(T, p)));
   const vis = [], ocu = [];
   for (const P1 of piezas) {
+    if (P1.forma) { const r = vistaForma(Object.assign({ clave: 'l' + T.h + T.v + T.frente }, T), P1.p); if (r) { vis.push(...r.vis); ocu.push(...r.ocu); } continue; }
     const delante = piezas.filter(Q => Q !== P1 && Q.c > P1.c + .01);
     for (const an of P1.anillos) for (let i = 0; i < an.length; i++) {
       const A = an[i], B = an[(i + 1) % an.length];
@@ -397,6 +399,7 @@ function zipAlmacen(archivos) { // ZIP sin compresión; nombres en UTF-8
   return new Blob([...partes, ...central, fin], { type: 'application/zip' });
 }
 function medidasTablero(p) { // {g, L, A, veta} en cm
+  if (typeof especial === 'function' && especial(p)) { const mf = medidasForma(p); if (mf) p = Object.assign({}, p, { w: mf.dim[0] / 10, h: mf.dim[1] / 10, d: mf.dim[2] / 10 }); }
   const th = ejeGrosor(p), cara = 'xyz'.split('').filter(e => e !== th), m = infoMaterial(p.material);
   const veta = m.tipo === 'madera';
   const dl = e => p[DIM[e]], ve = ejeVeta(p);

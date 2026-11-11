@@ -83,6 +83,7 @@ function encuadrarTodo() { Object.values(VISTAS).forEach(encuadrarVista); dibuja
 function estilo(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
 function trazarPieza(c, V, p) { // crea el camino de la pieza en la vista; devuelve true si es elipse/contorno
+  if (typeof especial === 'function' && especial(p) && trazarForma(c, V, p)) return true;
   c.beginPath();
   if (tieneContorno(p) && TIPOS[p.plano].h === V.h && TIPOS[p.plano].v === V.v) {
     const cm = contornoMundo(p);
@@ -140,9 +141,10 @@ function dibujarVista(V) {
   if (temp && temp.V === V) lista.push(temp.p);
   const tx = estilo('--texto');
   for (const p of lista) {
-    trazarPieza(c, V, p);
-    c.fillStyle = colorPieza(p); c.globalAlpha = .42; c.fill('evenodd');
-    c.globalAlpha = 1; c.strokeStyle = tx; c.lineWidth = 1; c.stroke();
+    const forma = trazarPieza(c, V, p) && typeof especial === 'function' && especial(p);
+    c.fillStyle = colorPieza(p); c.globalAlpha = .42; c.fill(forma ? 'nonzero' : 'evenodd');
+    c.globalAlpha = 1; c.strokeStyle = tx; c.lineWidth = 1;
+    if (forma) rayasForma(c, V, p); else c.stroke();
   }
   c.globalAlpha = 1;
   if (typeof dibujarEnsamblesVista === 'function') dibujarEnsamblesVista(c, V);

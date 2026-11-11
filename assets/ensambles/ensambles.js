@@ -233,11 +233,12 @@
   $('bAplicar').onclick = () => {
     if (!resultado) return;
     if (!DESDE || !window.opener) { console.log(JSON.stringify(resultado)); aviso('Ejemplo sin Boceto: el resultado se ha escrito en la consola'); return; }
-    enviar({ tipo: 'ensamble-resultado', ensamble: resultado }); window.close();
-    setTimeout(() => aviso('Ensamble enviado a Boceto. Ya puedes cerrar esta pestaña.'), 300);
+    enviar({ tipo: 'ensamble-resultado', ensamble: resultado });
+    cierre = setTimeout(() => { window.close(); setTimeout(() => aviso('Ensamble enviado a Boceto. Ya puedes cerrar esta pestaña.'), 300); }, 600);   // si Boceto manda otro (nudo de dos travesaños), se sigue aquí
   };
   $('bCancelar').onclick = () => { enviar({ tipo: 'ensamble-cancelar' }); if (DESDE) window.close(); };
-  addEventListener('message', e => { const m = e.data; if (m && m.tipo === 'boceto-ensamble-envio' && m.datos) iniciar(m.datos); });
+  let cierre = null;
+  addEventListener('message', e => { const m = e.data; if (m && m.tipo === 'boceto-ensamble-envio' && m.datos) { clearTimeout(cierre); J = null; iniciar(m.datos); } });
   if (DESDE && window.opener) { enviar({ tipo: 'ensambles-listo' }); setTimeout(() => { if (!DAT) iniciar(DEMO); }, 4000); }
   else iniciar(DEMO);
   window.__ens = { iniciar, get resultado() { return resultado; }, elegir };

@@ -79,6 +79,7 @@ function pintarProps() {
   $('#sinSel').classList.toggle('oculto', n > 0); $('#conSel').classList.toggle('oculto', !n);
   $('#tituloSel').textContent = !n ? 'Pieza seleccionada' : n === 1 ? 'Pieza seleccionada' : g ? 'Grupo · ' + n + ' piezas' : n + ' piezas seleccionadas';
   if (typeof pintarEnsambles === 'function') pintarEnsambles();
+  if (typeof pintarForma === 'function') pintarForma();
   if (!n) return;
   const p = L[0], act = document.activeElement;
   const set = (id, v) => { const e = $(id); if (e !== act) e.value = v; };

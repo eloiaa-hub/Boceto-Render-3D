@@ -24,6 +24,7 @@ function contactoCajas(a, b, tol = .05) {
 function analizarEnsamble(L) {
   if (L.length < 2 || L.length > 3) return { error: 'Selecciona 2 piezas que se tocan (esquina o T), o una pata y sus dos travesaños.' };
   if (L.some(p => p.forma !== 'caja')) return { error: 'Por ahora los ensambles son solo entre piezas rectas (forma «Caja / tablero»).' };
+  if (L.some(p => inclinada(p) || conCortes(p))) return { error: 'Las piezas inclinadas o con ingletes no admiten todavía ensambles de la biblioteca.' };
   if (L.some(p => ['metal', 'metalpint', 'cristal'].includes(infoMaterial(p.material).tipo))) return { error: 'Los ensambles son para piezas de madera: hay una pieza de metal o de cristal en la selección.' };
   const avisos = [];
   if (L.some(p => nucleoDe(p) !== 'macizo')) avisos.push('Alguna pieza no es de madera maciza: los ensambles clásicos son para macizo.');
@@ -51,6 +52,10 @@ function analizarEnsamble(L) {
   const tr = L.filter(q => q !== pata), kP = ejeLargo(pata), kA = ejeLargo(tr[0]), kB = ejeLargo(tr[1]);
   if (kA === kB || kA === kP || kB === kP) return { error: 'Los dos travesaños tienen que llegar a la pata en dos caras distintas, en ángulo recto.' };
   if (tr.some(t => contactoCajas(pata, t).k !== ejeLargo(t))) return { error: 'Cada travesaño tiene que llegar a la pata por su testa.' };
+  // travesaños a distinta altura (no se cruzan dentro de la pata): dos ensambles, uno detrás de otro
+  if (Math.min(fin(tr[0], kP), fin(tr[1], kP)) - Math.max(ini(tr[0], kP), ini(tr[1], kP)) < .05) return { secuencia: tr.map(t => [pata, t]) };
+  // tres listones iguales en un nudo: no caben dos cajas; mejor a inglete
+  if (tr.some(t => Math.min(...EJ3.filter(k => k !== ejeLargo(t)).map(k => med(t, k))) >= Math.min(...EJ3.filter(q => q !== kP).map(q => med(pata, q))) - .5)) return { error: 'Los travesaños son tan gruesos como la pata: dos cajas no caben. Para un nudo de tres listones iguales usa «◿ Inglete en esquina».' };
   const sec = EJ3.filter(k => k !== kP).map(k => mm(med(pata, k)));
   if (Math.abs(sec[0] - sec[1]) > 1) avisos.push(`La pata no es cuadrada (${sec[0]} × ${sec[1]} mm): se calcula con ${Math.min(...sec)} mm.`);
   const a = tr[0], kt = kB;                                  // grueso del travesaño A: en la dirección del B
@@ -64,8 +69,11 @@ function analizarEnsamble(L) {
     piezas: [{ id: pata.id, nombre: pata.nombre, rol: 'pata', L: mm(med(pata, kP)), A: sec[0], G: sec[1] }]
       .concat(tr.map(t => { const k = ejeLargo(t), o = EJ3.filter(x => x !== k && x !== kP)[0]; return { id: t.id, nombre: t.nombre, rol: 'travesano', L: mm(med(t, k)), A: mm(med(t, kP)), G: mm(med(t, o)) }; })) };
 }
+let ensCola = [];
 function abrirEnsamble() {
-  const r = analizarEnsamble(seleccionadas());
+  let r = analizarEnsamble(seleccionadas());
+  ensCola = [];
+  if (r.secuencia) { ensCola = r.secuencia.slice(1); r = analizarEnsamble(r.secuencia[0]); if (!r.error) (r.avisos = r.avisos || []).unshift('Travesaños a distinta altura: primero este y luego el otro (1 de 2).'); }
   if (r.error) return modal('🪵 Ensamble', `<p>${r.error}</p><p class="nota">Ejemplo: en la mesa de comedor, selecciona una pata y las dos cinturas que llegan a ella (Mayús + clic).</p>`, [{ txt: 'Cerrar', primario: true }]);
   ensDatos = r;
   ensVentana = window.open(ENS_URL + '?desde=boceto', '_blank');
@@ -81,7 +89,13 @@ window.addEventListener('message', e => {
     guardarHistoria();
     P.ensambles = (P.ensambles || []).filter(x => !(x.piezas.length === en.piezas.length && en.piezas.every(q => x.piezas.some(y => y.id === q.id))));
     P.ensambles.push(Object.assign({ uid: nuevoId('e') }, en));
-    cambio(true); window.focus(); ofrecerRepetir(en);
+    cambio(true);
+    if (ensCola.length) {                   // el siguiente travesaño del nudo, en la misma pestaña
+      const sig = analizarEnsamble(ensCola.shift());
+      if (!sig.error) { (sig.avisos = sig.avisos || []).unshift('Ahora el segundo travesaño (2 de 2).'); ensDatos = sig; ensVentana.postMessage({ tipo: 'boceto-ensamble-envio', datos: sig }, '*'); return; }
+      aviso(sig.error);
+    }
+    window.focus(); ofrecerRepetir(en);
     const ex = en.piezas.filter(q => q.extra).map(q => `${q.nombre} +${String(q.extra).replace('.', ',')} mm`);
     aviso(`Ensamble «${en.nombre}» guardado` + (ex.length ? ' · largo de corte: ' + ex.join(', ') : ''));
   }
@@ -189,7 +203,7 @@ function geomEnsamble(s) {
 }
 // para MUEBLECAD: huella de la pieza vista de cara (para el contorno, con la espiga) y aristas de la caja, espiga, retalón…
 function caraEnsamble(p, th, eL, eA) {
-  const s = solidoEnsamble(p); if (!s) return null;
+  const sp = solidoPieza(p), s = sp && sp.loc; if (!s) return null;
   const I = k => 'xyz'.indexOf(k), it = I(th), iL = I(eL), iA = I(eA), half = [p.w / 2, p.h / 2, p.d / 2], r3 = v => Math.round(v * 1000) / 1000;
   const loc = (x, y, z) => { const v = [x, y, z]; return [(v[iL] + half[iL]) * 10, (v[iA] + half[iA]) * 10, (v[it] + half[it]) * 10]; };
   const huella = s.polys.filter(pl => Math.abs(pl.plane.normal[th]) > .99).map(pl => pl.verts.map(v => { const q = loc(v.pos.x, v.pos.y, v.pos.z); return { x: r3(q[0]), y: r3(q[1]) }; }));
@@ -266,7 +280,7 @@ function firmaForma(p, tal, th, eL, eA) {
     if (t.tipo === 'canto') { const a = cara3(t.a, t.b, G / 2), b = cara3(t.a + t.dir.x * t.prof, t.b + t.dir.y * t.prof, G / 2); els.push(['h' + t.d, a, b]); }
     else { const z0 = t.cara === 'A' ? G : 0, z1 = t.cara === 'A' ? G - t.prof : t.prof; els.push(['h' + t.d, cara3(t.a, t.b, z0), cara3(t.a, t.b, z1)]); }
   });
-  const s = solidoEnsamble(p);
+  const sp = solidoPieza(p), s = sp && sp.loc;
   if (s) { const E = CSG.edges(s, 20), sg = []; for (let i = 0; i < E.length; i += 6) sg.push([[0, 1, 2].map(k => E[i + k] * 10 + D[k] / 2), [0, 1, 2].map(k => E[i + 3 + k] * 10 + D[k] / 2)]); fundirTramos(sg).forEach(([a, b]) => els.push(['e', a, b])); }
   const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
   let igual = null, sim = null;
@@ -274,7 +288,7 @@ function firmaForma(p, tal, th, eL, eA) {
     if (pm.some((j, i) => Math.abs(D[j] - D[i]) > .05)) continue;
     for (let sg = 0; sg < 8; sg++) {
       const sgn = [0, 1, 2].map(i => (sg >> i) & 1 ? -1 : 1), det = sgn[0] * sgn[1] * sgn[2] * paridad(pm);
-      const tf = q => { const o = [0, 0, 0]; for (let i = 0; i < 3; i++) o[pm[i]] = sgn[i] > 0 ? q[i] : D[i] - q[i]; return o.map(v => Math.round(v * 10) / 10 + 0); };
+      const tf = q => { const o = [0, 0, 0]; for (let i = 0; i < 3; i++) o[pm[i]] = sgn[i] > 0 ? q[i] : D[i] - q[i]; return o.map(v => Math.round(v * 2) / 2 + 0); };
       const txt = els.map(([k, a, b]) => { const A = tf(a).join(','), B = tf(b).join(','); return k + ':' + (A < B ? A + ';' + B : B + ';' + A); }).sort().join('|');
       if (det > 0 && (igual === null || txt < igual)) igual = txt;
       if (sim === null || txt < sim) sim = txt;
