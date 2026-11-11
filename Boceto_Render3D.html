@@ -27,6 +27,7 @@
     <button id="bMueblecad" title="Plano de taller en MUEBLECAD 2D: vistas, piezas desplegadas, herrajes, cotas y despiece">▱ MUEBLECAD</button>
     <button id="bRender" class="primario" title="Generar la imagen final">📷 Render</button>
     <span class="sep"></span>
+    <button id="bModo" title="Modo básico (lo esencial) o avanzado (inclinación, redondeos, ensambles, cantos por lado, tolva)">🎓 Básico</button>
     <button id="bTema" title="Modo claro / oscuro">🌓</button>
     <button id="bAyuda" title="Manual de uso">❓ Ayuda</button>
   </div>
@@ -88,7 +89,7 @@
         <button data-plantilla="tirador" title="Tirador en la pieza seleccionada">━ Tirador</button>
         <button data-plantilla="mano" title="Pieza nueva dibujada a mano en MUEBLECAD 2D, en la vista activa">🖊 Pieza a mano…</button>
         <button data-plantilla="importar" title="Piezas con contorno desde un DXF o SVG (por ejemplo, del Calcador)">⤓ DXF / SVG…</button>
-        <button id="bTolva" title="Cuatro laterales inclinados con inglete compuesto">⌴ Tolva…</button>
+        <button id="bTolva" class="avanzado" title="Cuatro laterales inclinados con inglete compuesto">⌴ Tolva…</button>
         <button id="bMaderas" title="Fotos de madera: añadir, biblioteca y aula">🪵 Maderas…</button>
       </div>
     </section>
@@ -167,7 +168,7 @@
             <option value="ajuego">A juego (chapa / PVC)</option><option value="sin">Sin canto (se ve el alma)</option><option value="otro">De otro material</option></select></label>
           <label class="fila" id="filaCantoMat">Material del canto <select id="pCantoMat"></select></label>
           <label class="fila" id="filaCantoColor">Color del canto <input type="color" id="pCantoColor" value="#222222"></label>
-          <div id="filaCantoG" class="oculto"><div class="tit-medidas">Grueso del canto (mm)</div><div class="cantoG" id="cantoG"></div></div>
+          <div id="filaCantoG" class="oculto avanzado"><div class="tit-medidas">Grueso del canto (mm)</div><div class="cantoG" id="cantoG"></div></div>
         </div>
         <div class="col3">
           <button id="bDuplicar" title="Duplicar (Ctrl+D)">⧉ Duplicar</button>
@@ -177,7 +178,7 @@
           <button id="bDesagrupar" title="Deshacer el grupo (Ctrl+Mayús+G)">▢ Desagrupar</button>
           <button id="bSerie" title="Repetir la selección en serie">⋯ Repetir…</button>
         </div>
-        <div id="formaSec" class="subsec">
+        <div id="formaSec" class="subsec avanzado">
           <div class="tit-medidas">Inclinación <small>(prueba)</small></div>
           <div class="col2"><label class="fila">Sobre X (°) <input type="number" id="fAx" step="0.5"></label><label class="fila">Sobre Z (°) <input type="number" id="fAz" step="0.5"></label></div>
           <label class="fila">Gira sobre <select id="fPiv"><option value="arriba">su extremo de arriba</option><option value="centro">su centro</option><option value="abajo">su extremo de abajo</option></select></label>
@@ -188,9 +189,9 @@
           <div class="fRed"><span>Vistas de frente (fondo)</span><input type="number" id="fRz" min="0" step="1" title="Radio (mm)"><span class="esq" title="Esquinas que se redondean (X / Y)"><input type="checkbox" id="fMz3" title="X− Y+"><input type="checkbox" id="fMz2" title="X+ Y+"><input type="checkbox" id="fMz0" title="X− Y−"><input type="checkbox" id="fMz1" title="X+ Y−"></span></div>
           <div class="fRed"><span>Vistas de lado (a lo ancho)</span><input type="number" id="fRx" min="0" step="1" title="Radio (mm)"><span class="esq" title="Esquinas que se redondean (Y / Z)"><input type="checkbox" id="fMx3" title="Y− Z+"><input type="checkbox" id="fMx2" title="Y+ Z+"><input type="checkbox" id="fMx0" title="Y− Z−"><input type="checkbox" id="fMx1" title="Y+ Z−"></span></div>
           <div id="fInfo"></div>
-          <button id="fCortes" class="ancho" title="Quita los cortes de inglete o de tolva">Sin cortes</button>
+          <div class="col2"><button id="fCortes" title="Quita el inglete de las piezas seleccionadas">Sin ingletes</button><button id="bEditTolva" class="oculto" title="Cambia las medidas de la tolva y rehace sus cuatro laterales">⌴ Editar tolva…</button></div>
         </div>
-        <div id="ensSec" class="subsec">
+        <div id="ensSec" class="subsec avanzado">
           <div class="tit-medidas">Ensambles de madera maciza <small>(prueba)</small></div>
           <button id="bEnsamble" class="ancho" style="margin-top:2px" title="Elige el ensamble (caja y espiga, horquilla, media madera…) para 2 piezas que se tocan o una pata y sus dos travesaños">🪵 Ensamble…</button>
           <div id="ensLista" style="margin-top:6px"></div>

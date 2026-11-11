@@ -201,3 +201,4 @@ input:disabled,select:disabled{opacity:.55}
 .fRed{display:grid;grid-template-columns:1fr 54px auto;gap:6px;align-items:center;margin:4px 0;font-size:12px}
 .fRed .esq{display:grid;grid-template-columns:14px 14px;gap:1px}
 .fRed .esq input{margin:0;width:13px;height:13px}
+body.basico .avanzado{display:none!important}

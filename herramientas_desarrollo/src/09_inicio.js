@@ -310,6 +310,7 @@ function despieceCSV() {
 
 /* ===================== GENERAL ===================== */
 function cambio(confirmado) {
+  if (typeof ajustarIngletes === 'function') ajustarIngletes();     // los ingletes siguen a las medidas
   pintarLista(); pintarProps(); dibujarVistas(); sincronizar3D();
   if (confirmado) guardarLocal();
 }
@@ -417,6 +418,6 @@ $$('.barra .grupo button').forEach(b => {
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { solidoPieza, cajaReal, dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { cambio, solidoPieza, cajaReal, dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();

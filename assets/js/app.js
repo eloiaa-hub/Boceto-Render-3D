@@ -73,7 +73,7 @@ function escenaDefecto() {
 }
 function proyectoVacio() {
   return { app: 'Boceto a Render 3D', version: 2, versionPrograma: VERSION, nombre: 'proyecto', piezas: [], grupos: {}, bocetos: {}, referencia: null,
-           escena: escenaDefecto(), maderasUsuario: {}, ensambles: [], camara: null, vista: { abrir: 0, explosion: 0 } };
+           escena: escenaDefecto(), maderasUsuario: {}, ensambles: [], ingletes: [], camara: null, vista: { abrir: 0, explosion: 0 } };
 }
 let P = proyectoVacio();
 let sel = new Set();          // ids de las piezas seleccionadas
@@ -114,8 +114,8 @@ function limpiarGrupos() { // quita grupos vacíos
   P.piezas.forEach(p => { if (p.grupo && !P.grupos[p.grupo]) p.grupo = null; });
 }
 
-function foto() { return JSON.stringify({ piezas: P.piezas, grupos: P.grupos, ensambles: P.ensambles || [] }); }
-function restaurar(s) { const o = JSON.parse(s); P.piezas = o.piezas; P.grupos = o.grupos || {}; P.ensambles = o.ensambles || []; }
+function foto() { return JSON.stringify({ piezas: P.piezas, grupos: P.grupos, ensambles: P.ensambles || [], ingletes: P.ingletes || [] }); }
+function restaurar(s) { const o = JSON.parse(s); P.piezas = o.piezas; P.grupos = o.grupos || {}; P.ensambles = o.ensambles || []; P.ingletes = o.ingletes || []; }
 function guardarHistoria() {
   historial.push(foto());
   if (historial.length > 120) historial.shift();
@@ -3156,7 +3156,7 @@ function fundirTramos(L) {
    La pieza sigue guardando su caja (x, y, z, w, h, d) sin girar: es la madera de partida, centrada donde estaba. */
 function inclinada(p) { return !!(p.inc && (Math.abs(p.inc.ax || 0) > .01 || Math.abs(p.inc.az || 0) > .01)); }
 function redondeada(p) { return !!(p.redondeo && EJ3.some(k => p.redondeo[k] && +p.redondeo[k].r > 0)); }
-function conCortes(p) { return !!(p.cortes && p.cortes.length); }
+function conCortes(p) { return !!((p.cortes && p.cortes.length) || ingletesDe(p.id).length); }
 function especial(p) { return p.forma === 'caja' && !tieneContorno(p) && (inclinada(p) || conCortes(p) || redondeada(p)); }
 const mul3 = (A, B) => A.map(f => [0, 1, 2].map(j => f[0] * B[0][j] + f[1] * B[1][j] + f[2] * B[2][j]));
 const apl3 = (R, v) => R.map(f => f[0] * v[0] + f[1] * v[1] + f[2] * v[2]);
@@ -3193,7 +3193,7 @@ function solidoPieza(p) {
   if (!window.CSG || p.forma !== 'caja' || tieneContorno(p)) return null;
   const ens = inclinada(p) ? [] : ensamblesDe(p.id).filter(e => e.marco && e.piezas.some(q => q.id === p.id && q.ops));
   if (!especial(p) && !ens.length) return null;
-  const key = JSON.stringify([p.w, p.h, p.d, p.x, p.y, p.z, p.inc, p.cortes, p.redondeo, ens.map(e => [e.uid, e.piezas.map(q => { const r = pieza(q.id); return r ? [r.x, r.y, r.z, r.w, r.h, r.d] : 0; })])]);
+  const key = JSON.stringify([p.w, p.h, p.d, p.x, p.y, p.z, p.inc, p.cortes, p.redondeo, ingletesDe(p.id).map(g => g.ids.map(id => { const r = pieza(id); return [r.x, r.y, r.z, r.w, r.h, r.d]; })), ens.map(e => [e.uid, e.piezas.map(q => { const r = pieza(q.id); return r ? [r.x, r.y, r.z, r.w, r.h, r.d] : 0; })])]);
   const c0 = cacheForma.get(p.id); if (c0 && c0.key === key) return c0.s;
   let res = null;
   try {
@@ -3223,7 +3223,7 @@ function solidoPieza(p) {
       add.forEach(a => s = s.union(a)); sub.forEach(b => s = s.subtract(b));
     }
     // cortes (guardados en el mundo) → al sistema de la pieza: q_mun = R·q_loc + t
-    const Rt = tras3(R), planos = (p.cortes || []).map(k => ({ n: k.n, c: k.c }));
+    const Rt = tras3(R), planos = cortesDe(p).map(k => ({ n: k.n, c: k.c }));
     if (inc && p.inc.horiz) planos.push({ n: [0, 1, 0], c: p.h / 2 }, { n: [0, -1, 0], c: p.h / 2 });
     for (const k of planos) { const nl = apl3(Rt, k.n), cl = k.c - (k.n[0] * t[0] + k.n[1] * t[1] + k.n[2] * t[2]); s = s.subtract(semiespacio(nl, cl)); }
     res = { loc: s, mun: inc ? CSG.transform(s, R, t) : s, R, t };
@@ -3248,7 +3248,7 @@ function medidasForma(p) {
 }
 function angulosCortes(p, s) {
   const th = ejeGrosor(p), eL = EJ3.filter(k => k !== th).sort((a, b) => med(p, b) - med(p, a))[0], eA = EJ3.find(k => k !== th && k !== eL), I = { x: 0, y: 1, z: 2 }, out = [];
-  const planos = (p.cortes || []).map(k => k.n);
+  const planos = cortesDe(p).map(k => k.n);
   if (inclinada(p) && p.inc.horiz) planos.push([0, 1, 0], [0, -1, 0]);
   const vistos = new Set();
   for (const n0 of planos) {
@@ -3328,7 +3328,9 @@ function pintarForma() {
   EJ3.forEach(k => { const o = (p.redondeo || {})[k] || {}; set('#fR' + k, o.r || 0); const m = o.m || '1111'; [0, 1, 2, 3].forEach(i => set('#fM' + k + i, m[i] === '1')); });
   const md = L.length === 1 ? medidasForma(p) : null;
   $('#fInfo').innerHTML = md ? `<div class="fila"><span>Madera de partida</span><b>${md.dim.slice().sort((a, b) => b - a).map(v => String(v).replace('.', ',')).join(' × ')} mm</b></div>` + (md.angulos.length ? `<p class="nota">${md.angulos.join('<br>')}</p>` : '') : '';
-  $('#fCortes').textContent = conCortes(p) ? `Quitar cortes (${p.cortes.length})` : 'Sin cortes';
+  $('#fCortes').textContent = ingletesDe(p.id).length ? 'Quitar el inglete' : conCortes(p) && p.tolvaLado == null ? 'Quitar cortes' : 'Sin ingletes';
+  const tg = p.grupo && P.grupos[p.grupo] && P.grupos[p.grupo].tolva; $('#bEditTolva').classList.toggle('oculto', !tg);
+  if (tg) $('#fInfo').insertAdjacentHTML('beforeend', '<p class="nota">Pieza de una tolva: sus medidas se cambian con «Editar tolva…».</p>');
   $('#fCortes').disabled = !L.some(conCortes);
 }
 function aplicarForma() {
@@ -3360,7 +3362,7 @@ function abrirHaciaFuera() {
       cambio(true); aviso('Piezas inclinadas ' + a + '°');
     } }]);
 }
-function quitarCortes() { const L = seleccionadas().filter(conCortes); if (!L.length) return; guardarHistoria(); L.forEach(p => p.cortes = null); cambio(true); }
+function quitarCortes() { const L = seleccionadas().filter(conCortes); if (!L.length) return; guardarHistoria(); const ids = new Set(L.map(p => p.id)); P.ingletes = (P.ingletes || []).filter(g => !g.ids.some(id => ids.has(id))); L.forEach(p => { if (p.tolvaLado == null) p.cortes = null; }); cambio(true); }
 
 /* ---------- inglete entre 2 o 3 piezas que se encuentran en una esquina ----------
    Cada pieza se alarga hasta la esquina de fuera y cada pareja se corta por el plano que va de la arista de dentro a la de fuera. */
@@ -3370,24 +3372,30 @@ function ingleteEsquina() {
   if (L.some(p => p.forma !== 'caja' || tieneContorno(p) || inclinada(p))) return aviso('El inglete es para piezas rectas sin inclinar');
   if (L.some(p => ensamblesDe(p.id).length)) return aviso('Quita antes los ensambles de esas piezas');
   const solape = (a, b, k) => Math.min(fin(a, k), fin(b, k)) - Math.max(ini(a, k), ini(b, k));
-  // 1. contactos: la pieza que llega con su testa se alarga a través de la otra, hasta su cara de fuera
-  const pares = [];
+  guardarHistoria();
+  const alargos = [];
+  // 1. la pieza que llega con su testa se alarga a través de la otra, hasta su cara de fuera (solo esta vez)
   for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
     const a = L[i], b = L[j];
     if (EJ3.some(k => solape(a, b, k) < -.05)) continue;
-    pares.push([a, b]);
-    const c = contactoCajas(a, b); if (!c) continue;                   // ya se solapan: nada que alargar
+    const c = contactoCajas(a, b); if (!c) continue;
     const dentro = (x, y) => EJ3.filter(k => k !== c.k).every(k => ini(x, k) >= ini(y, k) - .05 && fin(x, k) <= fin(y, k) + .05);
-    const [lleg, rec] = dentro(a, b) ? [a, b] : dentro(b, a) ? [b, a] : [a, b];
-    const k = c.k;
-    if (ini(lleg, k) < ini(rec, k)) lleg[DIM[k]] = fin(rec, k) - lleg[k]; else { const f = fin(lleg, k); lleg[k] = ini(rec, k); lleg[DIM[k]] = f - lleg[k]; }
+    const [lleg, rec] = dentro(a, b) ? [a, b] : dentro(b, a) ? [b, a] : [a, b], k = c.k;
+    alargos.push({ id: lleg.id, ref: rec.id, k, lado: ini(lleg, k) < ini(rec, k) ? 'max' : 'min' });
   }
-  if (!pares.length) return aviso('Las piezas no se tocan');
-  guardarHistoria();
-  // 2. para cada pareja, el plano de la diagonal del bloque común (de la arista de dentro a la de fuera)
-  let n = 0;
-  for (const [a, b] of pares) {
-    const R = {}; EJ3.forEach(k => { R[k + '0'] = Math.max(ini(a, k), ini(b, k)); R[k + '1'] = Math.min(fin(a, k), fin(b, k)); });
+  alargos.forEach(alargar);
+  // 2. se guarda la intención: los planos se recalculan siempre con las medidas que tengan las piezas
+  const ids = L.map(p => p.id), n = [...planosInglete(ids).values()].reduce((s, v) => s + v.length, 0) / 2;
+  if (!n) { deshacer(); return aviso('No hay uniones en ángulo entre esas piezas'); }
+  P.ingletes = (P.ingletes || []).filter(g => !g.ids.some(id => ids.includes(id))).concat([{ uid: nuevoId('i'), ids, alargos }]);
+  cambio(true); aviso(`Inglete hecho en ${n} ${n > 1 ? 'uniones' : 'unión'} · se rehace solo si cambias las medidas`);
+}
+// planos de inglete de un grupo de piezas, con sus medidas de ahora: Map id → [{ n, c }] (relativos al centro de cada pieza)
+function planosInglete(ids) {
+  const L = ids.map(pieza).filter(Boolean), out = new Map(L.map(p => [p.id, []]));
+  for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+    const a = L[i], b = L[j], R = {};
+    EJ3.forEach(k => { R[k + '0'] = Math.max(ini(a, k), ini(b, k)); R[k + '1'] = Math.min(fin(a, k), fin(b, k)); });
     if (EJ3.some(k => R[k + '1'] - R[k + '0'] < .01)) continue;
     const sale = p => EJ3.map(k => ({ k, v: Math.max(R[k + '0'] - ini(p, k), fin(p, k) - R[k + '1']) })).sort((x, y) => y.v - x.v)[0];
     const ea = sale(a), eb = sale(b); if (ea.k === eb.k || ea.v < .01 || eb.v < .01) continue;
@@ -3395,79 +3403,101 @@ function ingleteEsquina() {
     const ent = (k, s) => s > 0 ? R[k + '1'] : R[k + '0'], opu = (k, s) => s > 0 ? R[k + '0'] : R[k + '1'];
     const O = { [ka]: opu(ka, sa), [kb]: opu(kb, sb) }, In = { [ka]: ent(ka, sa), [kb]: ent(kb, sb) }, Qa = { [ka]: ent(ka, sa), [kb]: opu(kb, sb) };
     const d = [In[ka] - O[ka], In[kb] - O[kb]]; let N = [d[1], -d[0]];
-    if (N[0] * (Qa[ka] - O[ka]) + N[1] * (Qa[kb] - O[kb]) < 0) N = N.map(v => -v);    // N apunta al lado que se queda «a»
+    if (N[0] * (Qa[ka] - O[ka]) + N[1] * (Qa[kb] - O[kb]) < 0) N = N.map(v => -v);
     const Nv = { x: 0, y: 0, z: 0 }; Nv[ka] = N[0]; Nv[kb] = N[1];
     const NO = Nv[ka] * O[ka] + Nv[kb] * O[kb];
     const corta = (p, sg) => { const c = { x: p.x + p.w / 2, y: p.y + p.h / 2, z: p.z + p.d / 2 }, nn = EJ3.map(k => sg * Nv[k]);
-      (p.cortes = p.cortes || []).push({ n: nn, c: sg * NO - EJ3.reduce((s, k, i) => s + nn[i] * c[k], 0), txt: 'inglete' }); };
-    corta(a, -1); corta(b, 1); n++;                // a: se quita N·(q−O) < 0 ; b: se quita N·(q−O) > 0
+      out.get(p.id).push({ n: nn, c: sg * NO - EJ3.reduce((s, k, i) => s + nn[i] * c[k], 0), txt: 'inglete' }); };
+    corta(a, -1); corta(b, 1);
   }
-  cambio(true); aviso(n ? `Inglete hecho en ${n} ${n > 1 ? 'uniones' : 'unión'}` : 'No hay uniones en ángulo entre esas piezas');
+  return out;
+}
+// la pieza que llega se alarga hasta la cara de fuera de la otra (se repite cada vez que cambian las medidas)
+function alargar(x) {
+  const p = pieza(x.id), r = pieza(x.ref); if (!p || !r) return;
+  if (x.lado === 'max') { const L = fin(r, x.k) - p[x.k]; if (L > .01) p[DIM[x.k]] = L; }
+  else { const f = fin(p, x.k), o = ini(r, x.k); if (f - o > .01) { p[x.k] = o; p[DIM[x.k]] = f - o; } }
+}
+function ajustarIngletes() { for (const g of P.ingletes || []) (g.alargos || []).forEach(alargar); }
+function ingletesDe(id) { return (P.ingletes || []).filter(g => g.ids.includes(id) && g.ids.every(pieza)); }
+// todos los cortes de una pieza: los guardados (tolva) y los de sus ingletes, calculados ahora
+function cortesDe(p) {
+  const o = (p.cortes || []).slice();
+  for (const g of ingletesDe(p.id)) o.push(...(planosInglete(g.ids).get(p.id) || []));
+  return o;
 }
 
 /* ---------- tolva: cuatro laterales inclinados con ingletes compuestos ---------- */
-function abrirTolva() {
-  modal('Tolva (laterales inclinados)', `<p class="nota">Cuatro laterales inclinados hacia fuera, unidos a inglete compuesto, con los cantos de arriba y de abajo en horizontal. Medidas exteriores.</p>
-    <label class="fila">Ancho abajo (cm) <input type="number" id="tvA" value="40" step="0.5"></label>
-    <label class="fila">Fondo abajo (cm) <input type="number" id="tvF" value="30" step="0.5"></label>
-    <label class="fila">Alto (cm) <input type="number" id="tvH" value="25" step="0.5"></label>
-    <label class="fila">Inclinación de los lados (°) <input type="number" id="tvI" value="15" step="0.5" min="0" max="60"></label>
-    <label class="fila">Grueso (cm) <input type="number" id="tvG" value="1.8" step="0.1"></label>
+function abrirTolva(grupo) {
+  const t = grupo && P.grupos[grupo] && P.grupos[grupo].tolva || { A: 40, F: 30, H: 25, ang: 15, G: 1.8 };
+  modal(grupo ? 'Editar tolva' : 'Tolva (laterales inclinados)', `<p class="nota">Cuatro laterales inclinados hacia fuera, unidos a inglete compuesto, con los cantos de arriba y de abajo en horizontal. Medidas exteriores.</p>
+    <label class="fila">Ancho abajo (cm) <input type="number" id="tvA" value="${t.A}" step="0.5"></label>
+    <label class="fila">Fondo abajo (cm) <input type="number" id="tvF" value="${t.F}" step="0.5"></label>
+    <label class="fila">Alto (cm) <input type="number" id="tvH" value="${t.H}" step="0.5"></label>
+    <label class="fila">Inclinación de los lados (°) <input type="number" id="tvI" value="${t.ang}" step="0.5" min="0" max="60"></label>
+    <label class="fila">Grueso (cm) <input type="number" id="tvG" value="${t.G}" step="0.1"></label>
     <div id="tvRes" class="nota"></div>`,
-    [{ txt: 'Cancelar' }, { txt: 'Crear', primario: true, fn: crearTolva }]);
-  const calc = () => { const t = (parseFloat($('#tvI').value) || 0) * Math.PI / 180, g = v => (Math.round(v * 1800 / Math.PI) / 10 + '').replace('.', ',');
-    $('#tvRes').innerHTML = `Sierra (inglete compuesto, 4 lados): <b>inglete ${g(Math.atan(Math.sin(t) * Math.tan(Math.PI / 4)))}°</b> · <b>bisel ${g(Math.asin(Math.cos(t) * Math.sin(Math.PI / 4)))}°</b>. Cantos de arriba y abajo: bisel ${g(t)}°.`; };
-  ['#tvI'].forEach(s => $(s).oninput = calc); calc();
+    [{ txt: 'Cancelar' }, { txt: grupo ? 'Aplicar' : 'Crear', primario: true, fn: () => crearTolva(grupo) }]);
+  const calc = () => { const r = angulosTolva(parseFloat($('#tvI').value) || 0), g = v => String(v).replace('.', ',');
+    $('#tvRes').innerHTML = `Sierra (inglete compuesto, 4 lados): <b>inglete ${g(r.inglete)}°</b> · <b>bisel ${g(r.bisel)}°</b>. Cantos de arriba y abajo: bisel ${g(r.canto)}°.`; };
+  $('#tvI').oninput = calc; calc();
 }
-function crearTolva() {
-  const A = parseFloat($('#tvA').value), F = parseFloat($('#tvF').value), H = parseFloat($('#tvH').value), th = (parseFloat($('#tvI').value) || 0) * Math.PI / 180, G = parseFloat($('#tvG').value) || 1.8;
-  if (!(A > 0 && F > 0 && H > 0)) return aviso('Medidas no válidas');
+function angulosTolva(gr) { const t = gr * Math.PI / 180, r = v => Math.round(v * 1800 / Math.PI) / 10; return { inglete: r(Math.atan(Math.sin(t) * Math.tan(Math.PI / 4))), bisel: r(Math.asin(Math.cos(t) * Math.sin(Math.PI / 4))), canto: r(t) }; }
+// los cuatro laterales a partir de las medidas y del origen (centro de la base): [{ nombre, x, y, z, w, h, d, inc, cortes, veta, lado }]
+function generarTolva(t, org) {
+  const { A, F, H, G } = t, th = t.ang * Math.PI / 180, sh = H / Math.cos(th), ex = H * Math.tan(th);
+  const lados = [['Lateral delantero', [0, 0, 1]], ['Lateral trasero', [0, 0, -1]], ['Lateral izquierdo', [-1, 0, 0]], ['Lateral derecho', [1, 0, 0]]];
+  const caraFuera = o => ({ n: [o[0] * Math.cos(th), -Math.sin(th), o[2] * Math.cos(th)], d: (Math.abs(o[0]) * A / 2 + Math.abs(o[2]) * F / 2) * Math.cos(th) + o[0] * org[0] * Math.cos(th) + o[2] * org[2] * Math.cos(th) - Math.sin(th) * org[1] });
+  const L = lados.map(([nombre, o], lado) => {
+    const largo = o[0] ? 'z' : 'x', fP = caraFuera(o), Lg = (largo === 'x' ? A : F) + 2 * ex + 4;
+    const w = largo === 'x' ? Lg : G, d = largo === 'x' ? G : Lg, h = sh + 4;
+    const q = { nombre, lado, veta: largo, w, h, d, x: org[0] + o[0] * (A / 2 - G / 2) - w / 2, y: org[1] - 2, z: org[2] + o[2] * (F / 2 - G / 2) - d / 2,
+      inc: { ax: largo === 'x' ? o[2] * t.ang : 0, az: largo === 'z' ? -o[0] * t.ang : 0, piv: 'abajo', horiz: false } };
+    const Pv = [q.x + w / 2, q.y, q.z + d / 2], dAct = fP.n[0] * Pv[0] + fP.n[1] * Pv[1] + fP.n[2] * Pv[2] + G / 2, dl = (fP.d - dAct) / Math.cos(th);
+    q.x += o[0] * dl; q.z += o[2] * dl;
+    return { q, o, fP };
+  });
+  L.forEach(({ q, o, fP }) => {
+    const c = [q.x + q.w / 2, q.y + q.h / 2, q.z + q.d / 2], plano = (n, d) => ({ n, c: d - (n[0] * c[0] + n[1] * c[1] + n[2] * c[2]) });
+    q.cortes = [plano([0, -1, 0], -org[1]), plano([0, 1, 0], org[1] + H)];
+    L.forEach(({ o: o2, fP: f2 }) => { if (o2 === o || (o2[0] === -o[0] && o2[2] === -o[2])) return;
+      q.cortes.push(Object.assign(plano(fP.n.map((v, k) => f2.n[k] - v), f2.d - fP.d), { txt: 'inglete' })); });
+  });
+  return L.map(x => x.q);
+}
+function crearTolva(grupo) {
+  const t = { A: parseFloat($('#tvA').value), F: parseFloat($('#tvF').value), H: parseFloat($('#tvH').value), ang: parseFloat($('#tvI').value) || 0, G: parseFloat($('#tvG').value) || 1.8 };
+  if (!(t.A > 0 && t.F > 0 && t.H > 0 && t.G > 0 && t.ang >= 0 && t.ang < 60)) return aviso('Medidas no válidas');
   guardarHistoria();
-  const sh = H / Math.cos(th), ex = H * Math.tan(th), ids = [];
-  // caras de fuera: cada lado es un plano inclinado hacia fuera que pasa por la arista de abajo del rectángulo A × F
-  const lados = [
-    { nom: 'Lateral delantero', n: [0, Math.sin(th), Math.cos(th)], base: [A / 2, 0, F / 2], largo: 'x' },
-    { nom: 'Lateral trasero', n: [0, Math.sin(th), -Math.cos(th)], base: [A / 2, 0, -F / 2], largo: 'x' },
-    { nom: 'Lateral izquierdo', n: [-Math.cos(th), Math.sin(th), 0], base: [-A / 2, 0, F / 2], largo: 'z' },
-    { nom: 'Lateral derecho', n: [Math.cos(th), Math.sin(th), 0], base: [A / 2, 0, F / 2], largo: 'z' }];
-  // plano de la cara de fuera de cada lado: n·q = d, con n hacia fuera y la arista de abajo en el borde del rectángulo
-  const nf = l => { const o = l.largo === 'x' ? [0, 0, Math.sign(l.n[2])] : [Math.sign(l.n[0]), 0, 0]; return { n: [o[0] * Math.cos(th), -Math.sin(th), o[2] * Math.cos(th)], d: (Math.abs(o[0]) * A / 2 + Math.abs(o[2]) * F / 2) * Math.cos(th) }; };
-  const ox = 0, oz = 0, oy = 0;      // la tolva se coloca con su base en el origen; luego se puede mover
-  const piezasT = [];
-  lados.forEach((l, i) => {
-    const fP = nf(l), o = l.largo === 'x' ? [0, 0, Math.sign(l.n[2])] : [Math.sign(l.n[0]), 0, 0];
-    const L = (l.largo === 'x' ? A : F) + 2 * ex + 4;       // madera de partida (luego se corta)
-    // caja sin girar: vertical, con la cara de fuera en el borde del rectángulo de abajo; el giro la inclina sobre esa arista
-    const w = l.largo === 'x' ? L : G, d = l.largo === 'x' ? G : L, h = sh + 4;
-    const cx = o[0] * (A / 2 - G / 2), cz = o[2] * (F / 2 - G / 2);
-    const p = nuevaPieza({ nombre: l.nom, x: ox + cx - w / 2, y: oy - 2, z: oz + cz - d / 2, w, h, d, material: 'pino', veta: l.largo, canto: 0 });
-    // giro sobre la arista de abajo (pivote: abajo), hacia fuera
-    p.inc = { ax: l.largo === 'x' ? o[2] * th * 180 / Math.PI : 0, az: l.largo === 'z' ? -o[0] * th * 180 / Math.PI : 0, piv: 'abajo', horiz: false };
-    // se desplaza la caja (en horizontal, hacia fuera) para que su cara de fuera, ya girada, caiga en el plano de la tolva
-    const Pv = [p.x + p.w / 2, p.y, p.z + p.d / 2], dAct = fP.n[0] * Pv[0] + fP.n[1] * Pv[1] + fP.n[2] * Pv[2] + G / 2, dl = (fP.d - dAct) / Math.cos(th);
-    p.x += o[0] * dl; p.z += o[2] * dl;
-    piezasT.push({ p, o, fP });
-  });
-  // cortes: arriba y abajo en horizontal, y los ingletes entre lados vecinos (plano bisector de las caras de fuera)
-  piezasT.forEach(({ p, o, fP }) => {
-    const c = [p.x + p.w / 2, p.y + p.h / 2, p.z + p.d / 2];
-    const plano = (n, d) => ({ n, c: d - (n[0] * c[0] + n[1] * c[1] + n[2] * c[2]) });   // n·q ≤ d en el mundo → relativo al centro
-    p.cortes = [plano([0, -1, 0], -oy), plano([0, 1, 0], oy + H)];
-    piezasT.forEach(({ o: o2, fP: f2 }) => {
-      if (o2 === o || (o2[0] === -o[0] && o2[2] === -o[2])) return;        // solo los vecinos
-      // bisector: (n1 - n2)·q = d1 - d2; esta pieza se queda del lado de su cara (n1·q - d1 ≥ n2·q - d2 dentro… )
-      const n = fP.n.map((v, k) => f2.n[k] - v), dd = f2.d - fP.d;   // se quita lo que está más hacia el vecino
-      p.cortes.push(Object.assign(plano(n, dd), { txt: 'inglete' }));
-    });
-    P.piezas.push(p); ids.push(p.id);
-  });
-  nuevoGrupo('Tolva', ids);
+  const G0 = grupo && P.grupos[grupo];
+  if (G0 && G0.tolva) {
+    // dónde está ahora (si se movió el grupo): se compara el lateral delantero con donde estaría
+    const viejo = G0.tolva, prev = generarTolva(viejo, viejo.o)[0], act = piezasGrupo(grupo).find(q => q.tolvaLado === 0);
+    const o = act ? [viejo.o[0] + act.x - prev.x, viejo.o[1] + act.y - prev.y, viejo.o[2] + act.z - prev.z] : viejo.o;
+    const nuevas = generarTolva(t, o);
+    piezasGrupo(grupo).forEach(p => { const q = nuevas[p.tolvaLado]; if (q) Object.assign(p, { x: q.x, y: q.y, z: q.z, w: q.w, h: q.h, d: q.d, inc: q.inc, cortes: q.cortes }); });
+    G0.tolva = Object.assign(t, { o });
+    cambio(true); return aviso('Tolva actualizada');
+  }
+  const o = [0, 0, 0], ids = [];
+  generarTolva(t, o).forEach(q => { const p = nuevaPieza({ nombre: q.nombre, x: q.x, y: q.y, z: q.z, w: q.w, h: q.h, d: q.d, material: 'pino', veta: q.veta, canto: 0 }); Object.assign(p, { inc: q.inc, cortes: q.cortes, tolvaLado: q.lado }); P.piezas.push(p); ids.push(p.id); });
+  const g = nuevoGrupo('Tolva', ids); P.grupos[g].tolva = Object.assign(t, { o });
   sel = new Set(ids); cambio(true); encuadrarTodo();
-  aviso('Tolva creada: 4 laterales inclinados ' + Math.round(th * 1800 / Math.PI) / 10 + '°');
+  aviso('Tolva creada: 4 laterales inclinados ' + String(t.ang).replace('.', ',') + '°');
 }
 
 ['#fAx', '#fAz', '#fPiv', '#fHoriz'].concat(...EJ3.map(k => ['#fR' + k, ...[0, 1, 2, 3].map(i => '#fM' + k + i)])).forEach(id => { const e = $(id); if (e) e.onchange = aplicarForma; });
-$('#bHaciaFuera').onclick = abrirHaciaFuera; $('#bInglete').onclick = ingleteEsquina; $('#fCortes').onclick = quitarCortes; $('#bTolva').onclick = abrirTolva;
+$('#bHaciaFuera').onclick = abrirHaciaFuera; $('#bInglete').onclick = ingleteEsquina; $('#fCortes').onclick = quitarCortes; $('#bTolva').onclick = () => abrirTolva(); $('#bEditTolva').onclick = () => { const p = seleccionadas()[0]; if (p && p.grupo) abrirTolva(p.grupo); };
+
+/* ---------- modo básico (lo esencial, para empezar) o avanzado ---------- */
+function ponerModo(m) {
+  document.body.classList.toggle('basico', m === 'basico');
+  $('#bModo').textContent = m === 'basico' ? '🎓 Básico' : '🛠 Avanzado';
+  $('#bModo').classList.toggle('activo', m !== 'basico');
+  try { localStorage.setItem('boceto3d.modo', m); } catch (e) {}
+}
+$('#bModo').onclick = () => { const m = document.body.classList.contains('basico') ? 'avanzado' : 'basico'; ponerModo(m); aviso(m === 'basico' ? 'Modo básico: se ocultan inclinación, redondeos, ensambles, cantos por lado y tolva' : 'Modo avanzado: todas las herramientas'); };
+(() => { let m = 'avanzado'; try { m = localStorage.getItem('boceto3d.modo') || 'avanzado'; } catch (e) {} ponerModo(m); })();
 
 /* ===================== MUEBLECAD 2D: PLANO DE TALLER ===================== */
 /* Se manda el mueble a MUEBLECAD 2D (assets/mueblecad/mueblecad.html): las vistas con aristas visibles y ocultas
@@ -3780,6 +3810,7 @@ function despieceCSV() {
 
 /* ===================== GENERAL ===================== */
 function cambio(confirmado) {
+  if (typeof ajustarIngletes === 'function') ajustarIngletes();     // los ingletes siguen a las medidas
   pintarLista(); pintarProps(); dibujarVistas(); sincronizar3D();
   if (confirmado) guardarLocal();
 }
@@ -3887,6 +3918,6 @@ $$('.barra .grupo button').forEach(b => {
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { solidoPieza, cajaReal, dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { cambio, solidoPieza, cajaReal, dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();
