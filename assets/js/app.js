@@ -621,6 +621,7 @@ function dibujarVista(V) {
     c.globalAlpha = 1; c.strokeStyle = tx; c.lineWidth = 1; c.stroke();
   }
   c.globalAlpha = 1;
+  if (typeof dibujarEnsamblesVista === 'function') dibujarEnsamblesVista(c, V);
   // selección
   const acento = estilo('--acento');
   const L = temp && temp.V === V ? [temp.p] : seleccionadas().filter(p => p.visible);
@@ -2864,8 +2865,7 @@ function analizarEnsamble(L) {
     const kN = EJ3.find(k => k !== kL && k !== kR);
     const T = mm(med(llega, kN)), W = mm(med(llega, kR)), W1 = mm(med(recibe, kL)), T1 = mm(med(recibe, kN));
     const esquina = Math.abs(ini(llega, kR) - ini(recibe, kR)) < .05 || Math.abs(fin(llega, kR) - fin(recibe, kR)) < .05;
-    if (Math.abs(T - T1) > 1) avisos.push(`Las piezas no tienen el mismo grueso (${T} y ${T1} mm). Los ensambles de bastidor lo suponen igual: se calcula con ${T} mm.`);
-    if (Math.abs(W - W1) > 1) avisos.push(`Anchos distintos (${W1} mm la pieza que recibe, ${W} mm la que llega). La caja y espiga con retalón admite anchos distintos; los demás ensambles se calculan con el de la que llega.`);
+    if (Math.abs(T - T1) > 1 || Math.abs(W - W1) > 1) avisos.push(`Las piezas no tienen la misma sección (${W1} × ${T1} mm la que recibe, ${W} × ${T} mm la que llega): solo se ofrecen los ensambles que lo admiten, como la caja y espiga o los tarugos.`);
     return { sit: esquina ? 'esquina' : 'T', avisos, previo, medidas: { W, T, W1, T1 },
       piezas: [{ id: recibe.id, nombre: recibe.nombre, rol: 'recibe', L: mm(med(recibe, kR)), A: W1, G: T1 },
         { id: llega.id, nombre: llega.nombre, rol: 'llega', L: mm(med(llega, kL)), A: W, G: T }] };
@@ -3030,6 +3030,104 @@ function caraEnsamble(p, th, eL, eA) {
   return { huella, lineas: [...vistas.values()] };
 }
 
+/* ---------- el ensamble en las vistas 2D de Boceto: aristas de cajas, espigas y rebajes ----------
+   Continuas si se ven; a trazos si las tapa la propia pieza u otra que está delante. */
+const cacheVistaEns = new Map();
+function aristasEnsambleVista(V, p) {
+  const s = solidoEnsamble(p); if (!s) return null;
+  const key = V.h + V.v + V.prof + V.frente + '|' + (cacheEns.get(p.id) || {}).key;
+  const c0 = cacheVistaEns.get(p.id + V.clave); if (c0 && c0.key === key) return c0.r;
+  const E = CSG.edges(s, 20), cx = { x: p.x + p.w / 2, y: p.y + p.h / 2, z: p.z + p.d / 2 }, I = { x: 0, y: 1, z: 2 };
+  const pr = (i, k) => E[i + I[k]] + cx[k], r = rectVista(V, p), segs = [];
+  const enBorde = (a, b) => [[0, r.a0], [0, r.a1], [1, r.b0], [1, r.b1]].some(([k, v]) => Math.abs(a[k] - v) < .02 && Math.abs(b[k] - v) < .02 && (k ? a[0] >= r.a0 - .02 && a[0] <= r.a1 + .02 && b[0] >= r.a0 - .02 && b[0] <= r.a1 + .02 : a[1] >= r.b0 - .02 && a[1] <= r.b1 + .02 && b[1] >= r.b0 - .02 && b[1] <= r.b1 + .02));
+  for (let i = 0; i < E.length; i += 6) {
+    const A = [pr(i, V.h), pr(i, V.v)], B = [pr(i + 3, V.h), pr(i + 3, V.v)];
+    if (Math.hypot(A[0] - B[0], A[1] - B[1]) < .02 || enBorde(A, B)) continue;
+    const prof = Math.max(pr(i, V.prof) * V.frente, pr(i + 3, V.prof) * V.frente);
+    segs.push({ A, B, prof });
+  }
+  // ocultación: la propia pieza (si la arista no está en su cara de delante) y las piezas que tiene delante
+  const vis = [], ocu = [], otras = P.piezas.filter(q => q.visible && q !== p && q.forma !== 'cilindro');
+  for (const g of segs) {
+    let tap = [];
+    for (const q of [p, ...otras]) {
+      if (cercania(V, q) <= g.prof + .02) continue;
+      const rr = rectVista(V, q), L = [[rr.a0, rr.b0], [rr.a1, rr.b0], [rr.a1, rr.b1], [rr.a0, rr.b1]];
+      tap.push(...tramosDentro(g.A, g.B, L, .005));
+    }
+    tap = unirIntervalos(tap);
+    let t = 0; const pt = u => [g.A[0] + (g.B[0] - g.A[0]) * u, g.A[1] + (g.B[1] - g.A[1]) * u];
+    for (const [t0, t1] of tap) { if (t0 > t + 1e-6) vis.push([pt(t), pt(t0)]); ocu.push([pt(t0), pt(t1)]); t = t1; }
+    if (t < 1 - 1e-6) vis.push([pt(t), pt(1)]);
+  }
+  const res = { vis, ocu };
+  cacheVistaEns.set(p.id + V.clave, { key, r: res });
+  return res;
+}
+function dibujarEnsamblesVista(c, V) {
+  if (!(P.ensambles || []).length) return;
+  const tx = estilo('--texto');
+  for (const p of P.piezas) {
+    if (!p.visible || !ensamblesDe(p.id).length) continue;
+    const r = aristasEnsambleVista(V, p); if (!r) continue;
+    c.strokeStyle = tx; c.lineWidth = 1;
+    c.beginPath(); for (const [a, b] of r.vis) { const A = w2s(V, a[0], a[1]), B = w2s(V, b[0], b[1]); c.moveTo(A[0], A[1]); c.lineTo(B[0], B[1]); } c.stroke();
+    c.setLineDash([4, 3]); c.globalAlpha = .7;
+    c.beginPath(); for (const [a, b] of r.ocu) { const A = w2s(V, a[0], a[1]), B = w2s(V, b[0], b[1]); c.moveTo(A[0], A[1]); c.lineTo(B[0], B[1]); } c.stroke();
+    c.setLineDash([]); c.globalAlpha = 1;
+  }
+}
+
+/* ---------- forma de la pieza para agrupar en MUEBLECAD ----------
+   Dos piezas son iguales si una, girada, coincide con la otra (medidas, veta, cantos, taladros y ensambles);
+   «simétricas» si coinciden reflejadas. Devuelve dos firmas: igual (solo giros) y sim (giros y simetrías). */
+function firmaForma(p, tal, th, eL, eA) {
+  const I = { x: 0, y: 1, z: 2 }, D = [p.w * 10, p.h * 10, p.d * 10], els = [];
+  const cara3 = (a, b, t) => { const q = [0, 0, 0]; q[I[eL]] = a; q[I[eA]] = b; q[I[th]] = t; return q; };
+  const G = D[I[th]];
+  if (infoMaterial(p.material).tipo === 'madera') { const v = I[ejeVeta(p)], a = D.map(x => x / 2), b = a.slice(); a[v] -= 10; b[v] += 10; els.push(['v', a, b]); }
+  if (llevaCanto(p)) ladosCanto(p).forEach(l => { const v = cantoLado(p, l); if (!v) return; const q = D.map(x => x / 2); q[I[l[0]]] = l[1] === '+' ? D[I[l[0]]] : 0; els.push(['c' + v, q, q]); });
+  (tal || []).forEach(t => {
+    if (t.tipo === 'canto') { const a = cara3(t.a, t.b, G / 2), b = cara3(t.a + t.dir.x * t.prof, t.b + t.dir.y * t.prof, G / 2); els.push(['h' + t.d, a, b]); }
+    else { const z0 = t.cara === 'A' ? G : 0, z1 = t.cara === 'A' ? G - t.prof : t.prof; els.push(['h' + t.d, cara3(t.a, t.b, z0), cara3(t.a, t.b, z1)]); }
+  });
+  const s = solidoEnsamble(p);
+  if (s) { const E = CSG.edges(s, 20), sg = []; for (let i = 0; i < E.length; i += 6) sg.push([[0, 1, 2].map(k => E[i + k] * 10 + D[k] / 2), [0, 1, 2].map(k => E[i + 3 + k] * 10 + D[k] / 2)]); fundirTramos(sg).forEach(([a, b]) => els.push(['e', a, b])); }
+  const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
+  let igual = null, sim = null;
+  for (const pm of perms) {
+    if (pm.some((j, i) => Math.abs(D[j] - D[i]) > .05)) continue;
+    for (let sg = 0; sg < 8; sg++) {
+      const sgn = [0, 1, 2].map(i => (sg >> i) & 1 ? -1 : 1), det = sgn[0] * sgn[1] * sgn[2] * paridad(pm);
+      const tf = q => { const o = [0, 0, 0]; for (let i = 0; i < 3; i++) o[pm[i]] = sgn[i] > 0 ? q[i] : D[i] - q[i]; return o.map(v => Math.round(v * 10) / 10 + 0); };
+      const txt = els.map(([k, a, b]) => { const A = tf(a).join(','), B = tf(b).join(','); return k + ':' + (A < B ? A + ';' + B : B + ';' + A); }).sort().join('|');
+      if (det > 0 && (igual === null || txt < igual)) igual = txt;
+      if (sim === null || txt < sim) sim = txt;
+    }
+  }
+  return { igual: hashTexto(igual || ''), sim: hashTexto(sim || '') };
+}
+function hashTexto(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 ^ s.charCodeAt(i)) >>> 0; return h.toString(36) + s.length.toString(36); }
+
+// une los tramos que están sobre la misma recta y se tocan (el CSG parte las aristas de forma distinta según la operación)
+function fundirTramos(L) {
+  const R = new Map(), r = v => Math.round(v * 10) / 10;
+  for (const [a, b] of L) {
+    let d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]; const n = Math.hypot(...d); if (n < .05) continue;
+    d = d.map(x => x / n); const k0 = d.findIndex(x => Math.abs(x) > 1e-6); if (d[k0] < 0) d = d.map(x => -x);
+    const ta = a[0] * d[0] + a[1] * d[1] + a[2] * d[2], tb = b[0] * d[0] + b[1] * d[1] + b[2] * d[2];
+    const o = [0, 1, 2].map(k => a[k] - ta * d[k]), key = d.map(x => Math.round(x * 1e4)).join(',') + '|' + o.map(r).join(',');
+    if (!R.has(key)) R.set(key, { d, o, iv: [] }); R.get(key).iv.push([Math.min(ta, tb), Math.max(ta, tb)]);
+  }
+  const out = [];
+  for (const { d, o, iv } of R.values()) {
+    iv.sort((x, y) => x[0] - y[0]); const m = [];
+    for (const i of iv) { if (m.length && i[0] <= m[m.length - 1][1] + .05) m[m.length - 1][1] = Math.max(m[m.length - 1][1], i[1]); else m.push(i.slice()); }
+    m.forEach(([t0, t1]) => out.push([o.map((v, k) => v + d[k] * t0), o.map((v, k) => v + d[k] * t1)]));
+  }
+  return out;
+}
+
 /* ===================== MUEBLECAD 2D: PLANO DE TALLER ===================== */
 /* Se manda el mueble a MUEBLECAD 2D (assets/mueblecad/mueblecad.html): las vistas con aristas visibles y ocultas
    (en mm, Y hacia arriba) y cada pieza de tablero con su material, alma, grueso, veta, cantos y contorno.
@@ -3066,8 +3164,9 @@ function paqueteMueblecad(uniones) {
       conts = loc.map(l => ({ pts: l.pts.map(q => aCara(q.x, q.y)), b: (l.b || []).map(x => espejo ? -x : +x) }));
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
+    const tal = taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []);
     piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, cantosLado, conts, girar: false,
-      tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []), marcaV: anclaMarca(p, vis), ens: caraEnsamble(p, th, eL, eA), largoCorte: mm(md.L) + sobrelargoDe(p.id) });
+      tal, marcaV: anclaMarca(p, vis), ens: caraEnsamble(p, th, eL, eA), largoCorte: mm(md.L) + sobrelargoDe(p.id), forma: conts ? null : firmaForma(p, tal, th, eL, eA) });
   }
   const aperturas = [];
   for (const [g, G] of Object.entries(P.grupos)) {
@@ -3444,6 +3543,6 @@ $$('.barra .grupo button').forEach(b => {
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();

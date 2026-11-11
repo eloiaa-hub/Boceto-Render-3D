@@ -12,6 +12,10 @@
     T: { t: 'Unión en T', ids: ['pasante', 'doble', 'acunada', 'tarugos', 'mmT', 'horquillaT', 'mmmilano'] }
   };
   const JM = {}; JOINTS.forEach(j => JM[j.id] = j);
+  // ensambles en los que las dos piezas tienen que tener la misma sección (horquillas, medias maderas, ingletes, colas)
+  const MISMA = ['horquilla', 'horquillaInglete', 'mmRecta', 'mmInglete', 'lengueta', 'mmT', 'horquillaT', 'mmmilano'];
+  function seccionesDistintas() { const m = DAT.medidas; return DAT.sit !== 'pata' && (Math.abs(m.W - m.W1) > 1 || Math.abs(m.T - m.T1) > 1); }
+  function noVale(id) { return seccionesDistintas() && MISMA.includes(id) ? 'Necesita las dos piezas con la misma sección' : ''; }
   // Ejemplo para abrir la página sola (sin Boceto): la pata de la mesa de comedor
   const DEMO = {
     sit: 'pata', demo: true,
@@ -75,9 +79,9 @@
   function pintarLista() {
     const S = SIT[DAT.sit], ids = S ? S.ids : [];
     $('nEns').textContent = ids.length;
-    $('lista').innerHTML = ids.map(id => { const j = JM[id]; return j ? `<div class="ens${J && J.id === id ? ' sel' : ''}" data-id="${id}"><span class="num">n.º ${j.num}</span><b>${esc(j.name)}</b><small>${esc(j.short || '')}</small></div>` : ''; }).join('') ||
+    $('lista').innerHTML = ids.map(id => { const j = JM[id], nv = noVale(id); return j ? `<div class="ens${J && J.id === id ? ' sel' : ''}${nv ? ' no' : ''}" data-id="${id}" ${nv ? `title="${esc(nv)}"` : ''}><span class="num">n.º ${j.num}</span><b>${esc(j.name)}</b><small>${esc(nv || j.short || '')}</small></div>` : ''; }).join('') ||
       '<p class="nota">No hay ensambles de la biblioteca para esta posición.</p>';
-    $('lista').querySelectorAll('.ens').forEach(d => d.onclick = () => elegir(d.dataset.id));
+    $('lista').querySelectorAll('.ens:not(.no)').forEach(d => d.onclick = () => elegir(d.dataset.id));
   }
   function elegir(id) {
     J = JM[id]; P = parametros(J); pintarLista();
@@ -119,7 +123,10 @@
   }
   let partes = [], resultado = null;
   function reconstruir(encuadrar) {
-    const err = J.validate ? J.validate(P) : '';
+    let err = J.validate ? J.validate(P) : '';
+    if (!err && DAT.sit !== 'pata') { const m = DAT.medidas;
+      if (P.e && P.e > m.T1 - 6) err = `La espiga (${num(P.e)} mm) no cabe en el grueso de la pieza que recibe (${num(m.T1)} mm).`;
+      else if (P.d && J.id === 'tarugos' && P.d > m.T1 - 6) err = `El tarugo no cabe en el grueso de la pieza que recibe (${num(m.T1)} mm).`; }
     $('msg').innerHTML = err ? `<div class="error">${esc(err)}</div>` : '';
     $('bAplicar').disabled = !!err;
     let defs = [];
@@ -150,6 +157,14 @@
         const Ab = visible(llegan[0].solid), lr = Rb.t.indexOf(Math.max(...Rb.t)), la = Ab.ax;
         out.push({ id: l.id, nombre: l.nombre, parte: llegan[0].name, extra: sobrelargo(llegan[0].solid, recibe.solid), ops: ops(llegan[0].solid, Ab) });
         const cA = [0, 1, 2].map(k => (Ab.mn[k] + Ab.mx[k]) / 2), cR = [0, 1, 2].map(k => (Rb.mn[k] + Rb.mx[k]) / 2);
+        // la pieza que recibe es más ancha (o estrecha) que en el modelo: lo que la atraviesa (caja y espiga pasantes) se alarga hasta su ancho real
+        const Wm = Rb.t[la], W1 = DAT.medidas.W1, dW = W1 - Wm;
+        if (Math.abs(dW) > .5 && J.id !== 'retalon') {
+          const dl0 = Math.sign(cA[la] - cR[la]) || 1, cara0 = dl0 > 0 ? Rb.mx[la] : Rb.mn[la];
+          const estira = L => L.map(a => { const o = a.slice(); for (let i = la; i < o.length; i += 3) if ((cara0 - o[i]) * dl0 >= Wm - .5) o[i] = Math.round((o[i] - dl0 * dW) * 1000) / 1000; return o; });
+          out.forEach(o => { o.ops = { sub: estira(o.ops.sub), add: estira(o.ops.add) }; });
+          const ll = out[1]; if (ll.extra >= Wm - .5) ll.extra = Math.round((ll.extra + dW) * 10) / 10;
+        }
         marco = { tipo: 'par', lr, la, ln: 3 - lr - la, dl: Math.sign(cA[la] - cR[la]) || 1, el: Math.abs(cA[lr] - cR[lr]) < .5 ? 0 : Math.sign(cA[lr] - cR[lr]),
           cara: cA[la] > cR[la] ? Rb.mx[la] : Rb.mn[la], cA };
       }
@@ -212,7 +227,7 @@
   function iniciar(d) {
     DAT = d; pintarPiezas();
     $('estadoB').textContent = d.demo ? 'Sin Boceto: ejemplo de prueba' : 'Conectado con Boceto';
-    const S = SIT[d.sit], prim = d.previo && JM[d.previo.id] ? d.previo.id : S && S.ids[0];
+    const S = SIT[d.sit], prim = d.previo && JM[d.previo.id] && !noVale(d.previo.id) ? d.previo.id : S && S.ids.find(id => !noVale(id));
     pintarLista(); if (prim) elegir(prim); else { $('bAplicar').disabled = true; $('tit').textContent = 'Sin ensamble'; }
   }
   $('bAplicar').onclick = () => {

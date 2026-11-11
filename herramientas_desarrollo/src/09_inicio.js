@@ -35,8 +35,9 @@ function paqueteMueblecad(uniones) {
       conts = loc.map(l => ({ pts: l.pts.map(q => aCara(q.x, q.y)), b: (l.b || []).map(x => espejo ? -x : +x) }));
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
+    const tal = taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []);
     piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, cantosLado, conts, girar: false,
-      tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []), marcaV: anclaMarca(p, vis), ens: caraEnsamble(p, th, eL, eA), largoCorte: mm(md.L) + sobrelargoDe(p.id) });
+      tal, marcaV: anclaMarca(p, vis), ens: caraEnsamble(p, th, eL, eA), largoCorte: mm(md.L) + sobrelargoDe(p.id), forma: conts ? null : firmaForma(p, tal, th, eL, eA) });
   }
   const aperturas = [];
   for (const [g, G] of Object.entries(P.grupos)) {
@@ -413,6 +414,6 @@ $$('.barra .grupo button').forEach(b => {
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { dibujarVistas, firmaForma, camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();

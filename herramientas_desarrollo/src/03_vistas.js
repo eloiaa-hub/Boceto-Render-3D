@@ -145,6 +145,7 @@ function dibujarVista(V) {
     c.globalAlpha = 1; c.strokeStyle = tx; c.lineWidth = 1; c.stroke();
   }
   c.globalAlpha = 1;
+  if (typeof dibujarEnsamblesVista === 'function') dibujarEnsamblesVista(c, V);
   // selección
   const acento = estilo('--acento');
   const L = temp && temp.V === V ? [temp.p] : seleccionadas().filter(p => p.visible);
