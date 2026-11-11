@@ -14,3 +14,5 @@ Prueba rápida
   3. Pieza seleccionada → 🪵 Ensamble… → ajusta la espiga → ✔ Aplicar en Boceto → «Sí, a todas».
   4. Selecciona una cintura: el largo de corte ya incluye las dos espigas.
   La página ensambles.html también se abre sola (doble clic) con la pata de la mesa como ejemplo.
+  5. Oculta una cintura (ojo de la lista) para ver las cajas de la pata en el 3D.
+  6. 📋 Despiece y ▱ MUEBLECAD ya llevan el largo de corte y el dibujo de las espigas y las cajas.

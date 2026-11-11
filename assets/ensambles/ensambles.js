@@ -132,14 +132,27 @@
     // piezas de Boceto ↔ piezas del ensamble
     const recibe = defs.find(d => d.num === 1), llegan = defs.filter(d => d.num === 2 || (J.id === 'pataMesa' && d.num === 3));
     const pzB = DAT.piezas, out = [];
+    // operaciones de cada pieza, en el sistema del ensamble (mm): lo que se quita (caja, rebaje) y lo que se añade (espiga)
+    const Rb = caja(recibe.solid), cajaS = b => CSG.box(b.mn[0], b.mn[1], b.mn[2], b.mx[0], b.mx[1], b.mx[2]);
+    const ops = (sol, b) => { const bx = cajaS(b); return { sub: CSG.aDatos(bx.subtract(sol)), add: CSG.aDatos(sol.subtract(bx)) }; };
+    const visible = sol => { const b = caja(sol), ax = b.t.indexOf(Math.max(...b.t)), mn = b.mn.slice(), mx = b.mx.slice(), c = (b.mn[ax] + b.mx[ax]) / 2;
+      if (c > (Rb.mn[ax] + Rb.mx[ax]) / 2) mn[ax] = Math.max(mn[ax], Rb.mx[ax]); else mx[ax] = Math.min(mx[ax], Rb.mn[ax]); return { mn, mx, ax }; };
+    let marco;
     if (J.id === 'pataMesa') {
       const pata = pzB.find(p => p.rol === 'pata'), trav = pzB.filter(p => p.rol === 'travesano');
-      out.push({ id: pata.id, nombre: pata.nombre, parte: recibe.name, extra: 0 });
-      trav.forEach((t, i) => { const d = llegan[i] || llegan[0]; out.push({ id: t.id, nombre: t.nombre, parte: d.name, extra: sobrelargo(d.solid, recibe.solid) }); });
+      out.push({ id: pata.id, nombre: pata.nombre, parte: recibe.name, extra: 0, ops: ops(recibe.solid, Rb) });
+      trav.forEach((t, i) => { const d = llegan[i] || llegan[0]; out.push({ id: t.id, nombre: t.nombre, parte: d.name, extra: sobrelargo(d.solid, recibe.solid), ops: ops(d.solid, visible(d.solid)) }); });
+      marco = { tipo: 'pata', H: P.H };
     } else {
       const r = pzB.find(p => p.rol === 'recibe'), l = pzB.find(p => p.rol === 'llega');
-      out.push({ id: r.id, nombre: r.nombre, parte: recibe.name, extra: 0 });
-      if (llegan[0]) out.push({ id: l.id, nombre: l.nombre, parte: llegan[0].name, extra: sobrelargo(llegan[0].solid, recibe.solid) });
+      out.push({ id: r.id, nombre: r.nombre, parte: recibe.name, extra: 0, ops: ops(recibe.solid, Rb) });
+      if (llegan[0]) {
+        const Ab = visible(llegan[0].solid), lr = Rb.t.indexOf(Math.max(...Rb.t)), la = Ab.ax;
+        out.push({ id: l.id, nombre: l.nombre, parte: llegan[0].name, extra: sobrelargo(llegan[0].solid, recibe.solid), ops: ops(llegan[0].solid, Ab) });
+        const cA = [0, 1, 2].map(k => (Ab.mn[k] + Ab.mx[k]) / 2), cR = [0, 1, 2].map(k => (Rb.mn[k] + Rb.mx[k]) / 2);
+        marco = { tipo: 'par', lr, la, ln: 3 - lr - la, dl: Math.sign(cA[la] - cR[la]) || 1, el: Math.abs(cA[lr] - cR[lr]) < .5 ? 0 : Math.sign(cA[lr] - cR[lr]),
+          cara: cA[la] > cR[la] ? Rb.mx[la] : Rb.mn[la], cA };
+      }
     }
     // piezas sueltas: tarugos, cuñas, lengüetas…
     const suelt = {};
@@ -149,7 +162,7 @@
     const sueltas = Object.values(suelt).map(s => ({ n: s.n, qty: Math.max(s.fijo, s.qty) || 1, med: s.med }));
     const editables = {}; J.params.forEach(d => { if (d.k && !fijas(J).includes(d.k)) editables[d.k] = P[d.k]; });
     resultado = { id: J.id, num: J.num, nombre: J.name, sit: DAT.sit, params: editables,
-      piezas: out, sueltas, resumen: ch.map(r => [r[0], r[1]]), nota };
+      piezas: out, marco, sueltas, resumen: ch.map(r => [r[0], r[1]]), nota };
     $('resumen').innerHTML = out.map(o => {
       const pb = pzB.find(p => p.id === o.id);
       return `<li><b>${esc(o.nombre)}</b> (${esc(o.parte.toLowerCase())}): ` + (o.extra ? `entra ${num(o.extra)} mm en la otra pieza → largo de corte ${num(pb.L)} + ${num(o.extra)} = <b>${num(pb.L + o.extra)} mm</b> en este extremo` : 'mismo largo; lleva la caja o el rebaje') + '</li>';

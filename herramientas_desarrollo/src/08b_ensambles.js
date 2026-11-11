@@ -105,9 +105,8 @@ function ofrecerRepetir(en) {
   modal('🪵 Ensamble', `<p>Hay ${cand.length} pata${cand.length > 1 ? 's' : ''} más igual${cand.length > 1 ? 'es' : ''}, con sus dos travesaños: ${cand.map(r => '<b>' + r.piezas[0].nombre + '</b>').join(', ')}.</p><p>¿Les pongo el mismo ensamble («${en.nombre}», con las mismas medidas)?</p>`,
     [{ txt: 'No' }, { txt: 'Sí, a todas', primario: true, fn: () => {
       guardarHistoria();
-      const ex = en.piezas.find(q => q.extra) || { extra: 0 };
       cand.forEach(r => P.ensambles.push(Object.assign({}, JSON.parse(JSON.stringify(en)), { uid: nuevoId('e'),
-        piezas: r.piezas.map((q, i) => ({ id: q.id, nombre: q.nombre, parte: en.piezas[Math.min(i, en.piezas.length - 1)].parte, extra: i ? ex.extra : 0 })) })));
+        piezas: r.piezas.map((q, i) => Object.assign(JSON.parse(JSON.stringify(en.piezas[Math.min(i, en.piezas.length - 1)])), { id: q.id, nombre: q.nombre })) })));
       cambio(true); aviso('Ensamble puesto en ' + (cand.length + 1) + ' patas');
     } }]);
 }
@@ -129,3 +128,80 @@ function pintarEnsambles() {
   caja.querySelectorAll('[data-ens-ed]').forEach(b => b.onclick = () => { const e = P.ensambles.find(x => x.uid === b.dataset.ensEd); sel = new Set(e.piezas.map(q => q.id)); cambio(); abrirEnsamble(); });
 }
 $('#bEnsamble').onclick = abrirEnsamble;
+
+/* ---------- el ensamble en la geometría: espigas, cajas y rebajes ----------
+   Cada ensamble guarda, por pieza, lo que se quita y lo que se añade en el sistema del ensamble (mm)
+   y el «marco» para llevarlo a las piezas reales, aunque luego se muevan. */
+function paridad(pm) { let s = 1; for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) if (pm[i] > pm[j]) s = -s; return s; }
+function mapaEnsamble(e) {
+  const m = e.marco; if (!m) return null;
+  const Pz = e.piezas.map(q => pieza(q.id)); if (Pz.some(x => !x)) return null;
+  const I = k => 'xyz'.indexOf(k), cen = (p, k) => (ini(p, k) + fin(p, k)) / 2, ax = [];
+  if (m.tipo === 'pata') {
+    const [leg, A, B] = Pz, kP = ejeLargo(leg), kA = ejeLargo(A), kB = ejeLargo(B);
+    if (new Set([kP, kA, kB]).size < 3) return null;
+    const sA = Math.sign(cen(A, kA) - cen(leg, kA)) || 1, sB = Math.sign(cen(B, kB) - cen(leg, kB)) || 1, sP = Math.sign(cen(A, kP) - cen(leg, kP)) || 1;
+    ax[I(kA)] = { l: 0, s: sA, aL: 0, aW: (sA > 0 ? ini(leg, kA) : fin(leg, kA)) * 10 };
+    ax[I(kP)] = { l: 1, s: sP, aL: m.H, aW: (sP > 0 ? fin(leg, kP) : ini(leg, kP)) * 10 };
+    ax[I(kB)] = { l: 2, s: sB, aL: 0, aW: (sB > 0 ? ini(leg, kB) : fin(leg, kB)) * 10 };
+  } else {
+    const [R, A] = Pz, kR = ejeLargo(R), kL = ejeLargo(A); if (kR === kL) return null;
+    const kN = EJ3.find(k => k !== kR && k !== kL);
+    const dw = Math.sign(cen(A, kL) - cen(R, kL)) || 1, d = cen(A, kR) - cen(R, kR), ew = Math.abs(d) < .05 ? 0 : Math.sign(d);
+    ax[I(kL)] = { l: m.la, s: dw * m.dl, aL: m.cara, aW: (dw > 0 ? fin(R, kL) : ini(R, kL)) * 10 };
+    ax[I(kR)] = { l: m.lr, s: m.el && ew ? m.el * ew : 1, aL: m.cA[m.lr], aW: cen(A, kR) * 10 };
+    ax[I(kN)] = { l: m.ln, s: 1, aL: m.cA[m.ln], aW: cen(A, kN) * 10 };
+  }
+  const sg = ax.reduce((s, a) => s * a.s, 1) * paridad(ax.map(a => a.l));
+  return { f: (x, y, z) => { const L = [x, y, z]; return ax.map(a => a.s * (L[a.l] - a.aL) + a.aW); }, espejo: sg < 0 };
+}
+const cacheEns = new Map();
+// sólido de la pieza con sus ensambles, en cm y centrado en la pieza (como la malla del 3D); null si no lleva
+function solidoEnsamble(p) {
+  if (!window.CSG || p.forma !== 'caja' || tieneContorno(p)) return null;
+  const L = ensamblesDe(p.id).filter(e => e.marco && e.piezas.some(q => q.id === p.id && q.ops)); if (!L.length) return null;
+  const key = JSON.stringify([p.w, p.h, p.d, p.x, p.y, p.z, L.map(e => [e.uid, e.piezas.map(q => { const r = pieza(q.id); return r ? [r.x, r.y, r.z, r.w, r.h, r.d] : 0; })])]);
+  const c0 = cacheEns.get(p.id); if (c0 && c0.key === key) return c0.s;
+  const c = [p.x + p.w / 2, p.y + p.h / 2, p.z + p.d / 2];
+  let s = CSG.box(-p.w / 2, -p.h / 2, -p.d / 2, p.w / 2, p.h / 2, p.d / 2);
+  try {
+    const add = [], sub = [];
+    for (const e of L) {
+      const q = e.piezas.find(x => x.id === p.id), M = mapaEnsamble(e); if (!M) continue;
+      const f = (x, y, z) => { const w = M.f(x, y, z); return [w[0] / 10 - c[0], w[1] / 10 - c[1], w[2] / 10 - c[2]]; };
+      if (q.ops.add.length) add.push(CSG.deDatos(q.ops.add, f, M.espejo));
+      if (q.ops.sub.length) sub.push(CSG.deDatos(q.ops.sub, f, M.espejo));
+    }
+    add.forEach(a => s = s.union(a)); sub.forEach(b => s = s.subtract(b));
+  } catch (err) { console.error('Ensamble', p.nombre, err); s = null; }
+  cacheEns.set(p.id, { key, s }); return s;
+}
+// malla del 3D: triángulos agrupados por la cara de la caja a la que miran (+x, −x, +y, −y, +z, −z), como BoxGeometry
+function geomEnsamble(s) {
+  const a = CSG.toArrays(s), cubo = [[], [], [], [], [], []], cn = [[], [], [], [], [], []];
+  for (let i = 0; i < a.pos.length; i += 9) {
+    const n = [a.nor[i], a.nor[i + 1], a.nor[i + 2]], k = [0, 1, 2].reduce((m, j) => Math.abs(n[j]) > Math.abs(n[m]) ? j : m, 0), mi = k * 2 + (n[k] < 0 ? 1 : 0);
+    for (let j = 0; j < 9; j++) { cubo[mi].push(a.pos[i + j]); cn[mi].push(a.nor[i + j]); }
+  }
+  const g = new T.BufferGeometry(), pos = [], nor = []; let o = 0;
+  cubo.forEach((c, mi) => { if (!c.length) return; pos.push(...c); nor.push(...cn[mi]); g.addGroup(o, c.length / 3, mi); o += c.length / 3; });
+  g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(nor, 3));
+  return g;
+}
+// para MUEBLECAD: huella de la pieza vista de cara (para el contorno, con la espiga) y aristas de la caja, espiga, retalón…
+function caraEnsamble(p, th, eL, eA) {
+  const s = solidoEnsamble(p); if (!s) return null;
+  const I = k => 'xyz'.indexOf(k), it = I(th), iL = I(eL), iA = I(eA), half = [p.w / 2, p.h / 2, p.d / 2], r3 = v => Math.round(v * 1000) / 1000;
+  const loc = (x, y, z) => { const v = [x, y, z]; return [(v[iL] + half[iL]) * 10, (v[iA] + half[iA]) * 10, (v[it] + half[it]) * 10]; };
+  const huella = s.polys.filter(pl => Math.abs(pl.plane.normal[th]) > .99).map(pl => pl.verts.map(v => { const q = loc(v.pos.x, v.pos.y, v.pos.z); return { x: r3(q[0]), y: r3(q[1]) }; }));
+  const E = CSG.edges(s, 20), G = med(p, th) * 10, Lm = med(p, eL) * 10, Am = med(p, eA) * 10, vistas = new Map();
+  for (let i = 0; i < E.length; i += 6) {
+    const a = loc(E[i], E[i + 1], E[i + 2]), b = loc(E[i + 3], E[i + 4], E[i + 5]);
+    if (Math.hypot(a[0] - b[0], a[1] - b[1]) < .05) continue;
+    const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dentro = mx > .05 && mx < Lm - .05 && my > .05 && my < Am - .05;
+    const oculta = dentro && Math.max(a[2], b[2]) < G - .05 ? 1 : 0;
+    const A2 = [r3(a[0]), r3(a[1])], B2 = [r3(b[0]), r3(b[1])], k = [A2.join(','), B2.join(',')].sort().join('|');
+    if (!vistas.has(k) || (vistas.get(k).o && !oculta)) vistas.set(k, { a: A2, b: B2, o: oculta });
+  }
+  return { huella, lineas: [...vistas.values()] };
+}

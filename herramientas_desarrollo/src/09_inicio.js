@@ -36,7 +36,7 @@ function paqueteMueblecad(uniones) {
     }
     const nombre = p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, '') || p.nombre;
     piezas.push({ id: p.id, nombre, mat, gros: mm(md.g), L: mm(md.L), A: mm(md.A), veta: mat.veta, canto, cantosLado, conts, girar: false,
-      tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []), marcaV: anclaMarca(p, vis) });
+      tal: taladrosHerrajes(p, th, eL, eA, vis.filter(q => q !== p && esMetal(q))).concat(U.get(p) || []), marcaV: anclaMarca(p, vis), ens: caraEnsamble(p, th, eL, eA), largoCorte: mm(md.L) + sobrelargoDe(p.id) });
   }
   const aperturas = [];
   for (const [g, G] of Object.entries(P.grupos)) {
@@ -67,6 +67,7 @@ function comprasMueble(vis, piezas, esMetal) {
     if (t.tipo === 'canto' && /clavija/i.test(t.nom)) suma('Clavija Ø8×30');
     else if (/excéntrica/i.test(t.nom)) suma('Minifix (excéntrica y perno)');
   }
+  for (const e of P.ensambles || []) for (const q of e.sueltas || []) suma(q.n + ' ' + q.med, q.qty);
   return [...C].map(([n, cant]) => ({ n, cant }));
 }
 /* ---------- herrajes → taladros en la pieza (para MUEBLECAD) ----------
@@ -288,11 +289,12 @@ $('#bDespiece').onclick = () => {
 function despieceCSV() {
   const filas = {};
   for (const p of P.piezas) {
-    const m = [p.w, p.h, p.d].sort((a, b) => b - a).map(v => (Math.round(v * 10) / 10).toString().replace('.', ','));
+    const ex = sobrelargoDe(p.id) / 10, m = [p.w, p.h, p.d].sort((a, b) => b - a).map((v, i) => (Math.round((v + (i ? 0 : ex)) * 10) / 10).toString().replace('.', ','));
     const nuc = nucleoDe(p), mi = infoMaterial(p.material);
     const obs = [];
     if (tieneContorno(p)) obs.push('con contorno (' + ({ redondeado: 'esquinas redondeadas', chaflan: 'chaflanes', trapecio: 'trapecio', arco: 'arco', unero: 'uñero', importar: 'DXF/SVG', calcador: 'dibujado a mano' }[p.contorno.tipo] || 'contorno') + ')');
     if (p.forma === 'cilindro') obs.push('cilíndrica');
+    if (ex) obs.push('largo de corte con ' + ensamblesDe(p.id).map(e => e.nombre.toLowerCase()).filter((x, i, l) => l.indexOf(x) === i).join(' y ') + ' (+' + String(Math.round(ex * 100) / 10).replace('.', ',') + ' mm)');
     if (nuc !== 'macizo' && !['metal', 'metalpint', 'cristal'].includes(mi.tipo)) obs.push(ALMAS[nuc].nombre + (!llevaCanto(p) ? ', sin canto' : (p.cantos === 'otro' ? ', canto ' + infoMaterial(p.cantoMat).nombre : ', canto a juego') + ' ' + resumenCantos(p)));
     const g = p.grupo && P.grupos[p.grupo] ? P.grupos[p.grupo].nombre : '';
     const k = [p.nombre.replace(/ \((copia|simétrica)\)/g, '').replace(/\s\d+$/, ''), ...m, mi.nombre, obs.join('; '), g].map(s => String(s).replace(/;/g, ',')).join(';');
@@ -411,6 +413,6 @@ $$('.barra .grupo button').forEach(b => {
   try { guardado = JSON.parse(localStorage.getItem(CLAVE_LS) || 'null'); } catch (e) {}
   await cargarProyecto(guardado && guardado.piezas ? guardado : JSON.parse(JSON.stringify(window.EJEMPLO_MESITA)));
   marcarActiva(VISTAS.v1);
-  window.__app = { paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
+  window.__app = { camara, controles, aplicarPoses, render3D, sincronizar3D, solidoEnsamble, caraEnsamble, paqueteMueblecad, aplicarCalc, abrirCalcador, piezaAMano, contornosCalcadorMM, construirLamina, exportarAnidador, aristasVista, TIPOS, P: () => P, seleccionar, renderFinal, encuadrarTodo, VISTAS, cargarProyecto, sel: () => [...sel], procesarFoto, parseDXF, parseSVG, encadenar, clasificar };
 })();
 })();

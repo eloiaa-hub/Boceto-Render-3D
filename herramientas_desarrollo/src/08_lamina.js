@@ -431,7 +431,7 @@ function exportarAnidador() {
       continue;
     }
     const T2 = tableros[clave] = tableros[clave] || {};
-    const k = [nombre, fmtMM(md.L * 10), fmtMM(md.A * 10), md.veta ? 'sí' : 'no', cl, ca, tc].join(';');
+    const k = [nombre, fmtMM(md.L * 10 + sobrelargoDe(p.id)), fmtMM(md.A * 10), md.veta ? 'sí' : 'no', cl, ca, tc].join(';');
     T2[k] = (T2[k] || 0) + 1;
   }
   const archivos = [];

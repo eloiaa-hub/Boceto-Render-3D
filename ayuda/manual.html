@@ -399,8 +399,14 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 <li>Pulsa <b>✔ Aplicar en Boceto</b>. El ensamble queda guardado en el proyecto y, si es una pata, Boceto ofrece ponerlo también en las <b>demás patas iguales</b>.</li>
 </ol>
 <p><img src="img/ensambles.png" alt="Página de ensambles con la caja y espiga a tres maderas" style="max-width:100%;border:1px solid #ccc;border-radius:6px"></p>
-<p>Lo que cambia en Boceto: la pieza que mete su espiga o su rebaje en la otra suma esa medida a su <b>largo de corte</b> (se ve en la pieza seleccionada: por ejemplo, una cintura de 1340 mm con espigas de 35 mm en los dos extremos se corta a 1410 mm). Entre dos piezas con ensamble no se ponen clavijas ni Minifix al pasar a MUEBLECAD. Cada ensamble se puede <b>editar</b> o <b>quitar</b> desde la pieza, y se deshace con Ctrl+Z.</p>
-<div class="caja">Versión de prueba: el ensamble no se dibuja todavía en el 3D de Boceto ni en el plano de MUEBLECAD, y el largo de corte no pasa aún al despiece. Los ensambles de bastidor suponen las dos piezas del mismo grueso (si no, se avisa).</div>
+<p>Lo que cambia en Boceto:</p>
+<ul>
+<li><b>En el 3D</b> las piezas llevan su ensamble de verdad: cajas, espigas, retalones, rebajes y taladros de los tarugos. Se ve al ocultar una pieza o con la explosión, y sale en el render.<br><img src="img/ensamble_3d.png" alt="Pata con las cajas y los alojamientos del retalón" style="max-width:60%;border:1px solid #ccc;border-radius:6px;margin-top:6px"></li>
+<li><b>Largo de corte:</b> la pieza que mete su espiga o su rebaje en la otra suma esa medida (en la pieza seleccionada: una cintura de 1340 mm con espigas de 30 mm en los dos extremos se corta a 1400 mm). Ese largo pasa al <b>despiece</b> (hoja de cálculo, con la observación del ensamble) y al <b>Anidador</b>.</li>
+<li><b>En MUEBLECAD</b> cada pieza se dibuja con su contorno real (la espiga con su retalón sale del tablero) y con las aristas de cajas y rebajes en línea oculta; la cota de largo ya es el largo de corte. Los tarugos y las cuñas pasan a la lista de compra.</li>
+<li>Entre dos piezas con ensamble no se ponen clavijas ni Minifix. Cada ensamble se puede <b>editar</b> o <b>quitar</b> desde la pieza, y se deshace con Ctrl+Z.</li>
+</ul>
+<div class="caja">Versión de prueba. Los ensambles de bastidor suponen las dos piezas con la misma sección: si no la tienen, se avisa y el dibujo puede quedar algo desajustado. Las vistas 2D de Boceto siguen mostrando las piezas como cajas.</div>
 <h2 id="archivos">16. Guardar, abrir, despiece y Anidador</h2>
 <ul>
   <li><b>💾 Guardar</b> descarga un archivo <code>.boceto3d.json</code> con todo: piezas, grupos y movimientos, contornos, bocetos, maderas de fotos, escena y cámara. <b>📂 Abrir</b> lo recupera (también los proyectos de la versión anterior).</li>

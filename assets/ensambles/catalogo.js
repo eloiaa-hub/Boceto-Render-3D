@@ -233,7 +233,7 @@ var CSG = (function(){
     return [[c,-s,0],[s,c,0],[0,0,1]];
   }
   function unionAll(list){ var s=list[0]; for(var i=1;i<list.length;i++) s=s.union(list[i]); return s; }
-  return {Vec:Vec, box:box, prism:prism, cylinder:cylinder, subtractAll:subtractAll, unionAll:unionAll, toArrays:toArrays, edges:edges, edgeSegs:edgeSegs, isFeature:isFeature, transform:transform, rotMatrix:rotMatrix};
+  return {Vec:Vec, Vert:Vert, Poly:Poly, Solid:Solid, box:box, prism:prism, cylinder:cylinder, subtractAll:subtractAll, unionAll:unionAll, toArrays:toArrays, edges:edges, edgeSegs:edgeSegs, isFeature:isFeature, transform:transform, rotMatrix:rotMatrix};
 })();
 
 
@@ -778,4 +778,16 @@ var PROC = {
   pasante: ['m:1,2', 'c:1', 'c:2', 'a:1'],
   retalon: ['m:2', 'c:1', 'c:2', 'a:1'],
   pataMesa: ['m:1', 'c:1', 's:2,3', 'v:2,3', 'a:1']
+};
+
+
+/* ===== Añadido para Boceto: sólidos ↔ datos (listas de polígonos) ===== */
+CSG.aDatos = function(s){ var r=function(v){ return Math.round(v*1000)/1000; };
+  return s.polys.map(function(p){ var o=[]; p.verts.forEach(function(v){ o.push(r(v.pos.x),r(v.pos.y),r(v.pos.z)); }); return o; }); };
+/* f(x,y,z) → [x,y,z]: transformación de cada vértice; espejo: si invierte la orientación (se da la vuelta a los polígonos) */
+CSG.deDatos = function(d, f, espejo){
+  return new CSG.Solid((d||[]).map(function(a){ var vs=[];
+    for(var i=0;i<a.length;i+=3){ var q=f?f(a[i],a[i+1],a[i+2]):[a[i],a[i+1],a[i+2]]; vs.push(new CSG.Vert(new CSG.Vec(q[0],q[1],q[2]), new CSG.Vec(0,0,1))); }
+    if(espejo) vs.reverse();
+    var p=new CSG.Poly(vs); p.verts.forEach(function(v){ v.normal=p.plane.normal.clone(); }); return p; }));
 };

@@ -124,6 +124,8 @@ function geometria(p) {
     if (p.eje === 'z') { g.rotateX(Math.PI / 2); g.scale(p.w / 2, p.h / 2, 1); }
   } else if (tieneContorno(p)) {
     tipo = 'perfil'; g = geomPerfil(p);
+  } else if (ensamblesDe(p.id).length && solidoEnsamble(p)) {
+    g = geomEnsamble(solidoEnsamble(p));                       // con sus espigas, cajas y rebajes
   } else {
     const r = Math.min(p.canto / 10, Math.min(p.w, p.h, p.d) / 2 - .001);
     g = r > .02 ? new T.RoundedBoxGeometry(p.w, p.h, p.d, 3, r) : new T.BoxGeometry(p.w, p.h, p.d);
