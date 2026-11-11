@@ -194,3 +194,7 @@ input:disabled,select:disabled{opacity:.55}
 .ejemplos button:hover{border-color:var(--acento)}
 .barra .ir-portada{text-decoration:none;color:inherit;opacity:.7;font-size:17px;margin-right:2px}.barra .ir-portada:hover{opacity:1}
 .cantoG .fila{padding-left:10px}
+
+.ensItem{border:1px solid var(--borde);border-radius:6px;padding:6px 8px;margin:4px 0}
+.ensItem b{display:block}
+.ensItem small{display:block;color:var(--suave);margin:2px 0 5px}

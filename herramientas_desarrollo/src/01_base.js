@@ -73,7 +73,7 @@ function escenaDefecto() {
 }
 function proyectoVacio() {
   return { app: 'Boceto a Render 3D', version: 2, versionPrograma: VERSION, nombre: 'proyecto', piezas: [], grupos: {}, bocetos: {}, referencia: null,
-           escena: escenaDefecto(), maderasUsuario: {}, camara: null, vista: { abrir: 0, explosion: 0 } };
+           escena: escenaDefecto(), maderasUsuario: {}, ensambles: [], camara: null, vista: { abrir: 0, explosion: 0 } };
 }
 let P = proyectoVacio();
 let sel = new Set();          // ids de las piezas seleccionadas
@@ -114,8 +114,8 @@ function limpiarGrupos() { // quita grupos vacíos
   P.piezas.forEach(p => { if (p.grupo && !P.grupos[p.grupo]) p.grupo = null; });
 }
 
-function foto() { return JSON.stringify({ piezas: P.piezas, grupos: P.grupos }); }
-function restaurar(s) { const o = JSON.parse(s); P.piezas = o.piezas; P.grupos = o.grupos || {}; }
+function foto() { return JSON.stringify({ piezas: P.piezas, grupos: P.grupos, ensambles: P.ensambles || [] }); }
+function restaurar(s) { const o = JSON.parse(s); P.piezas = o.piezas; P.grupos = o.grupos || {}; P.ensambles = o.ensambles || []; }
 function guardarHistoria() {
   historial.push(foto());
   if (historial.length > 120) historial.shift();

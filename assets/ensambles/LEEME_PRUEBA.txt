@@ -1,0 +1,16 @@
+ENSAMBLES PARA BOCETO A RENDER 3D · versión de prueba (no publicada)
+=====================================================================
+
+Archivos nuevos
+  assets/ensambles/ensambles.html   Página de ensambles que abre Boceto (botón «🪵 Ensamble…»).
+  assets/ensambles/ensambles.js     Su programa: lista de ensambles, medidas, vista 3D y envío a Boceto.
+  assets/ensambles/catalogo.js      Núcleo CSG y biblioteca de 21 ensambles, sacados de Ensambles 3D V21
+                                    con herramientas_desarrollo/extraer_ensambles.py (no editar a mano).
+  herramientas_desarrollo/src/08b_ensambles.js   La parte de Boceto (análisis de la esquina, guardar, panel).
+
+Prueba rápida
+  1. Abre Boceto_Render3D.html → 🪑 Ejemplos → Mesa de comedor.
+  2. Selecciona con Mayús + clic una pata y las dos cinturas que llegan a ella.
+  3. Pieza seleccionada → 🪵 Ensamble… → ajusta la espiga → ✔ Aplicar en Boceto → «Sí, a todas».
+  4. Selecciona una cintura: el largo de corte ya incluye las dos espigas.
+  La página ensambles.html también se abre sola (doble clic) con la pata de la mesa como ejemplo.

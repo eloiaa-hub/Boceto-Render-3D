@@ -130,7 +130,8 @@ function calcularUniones(tableros, tipo) {
   for (const A of tableros) for (const B of tableros) {
     if (A === B) continue;
     const thA = ejeGrosor(A), thB = ejeGrosor(B), k = thA;            // A: la pieza que recibe en su cara; B: la que llega con su canto
-    if (thB === k || G(A) < 10 || G(B) < 10) continue;               // traseras y fondos finos, sin uniones
+    if (thB === k || G(A) < 10 || G(B) < 10) continue;
+    if ((P.ensambles || []).some(e => e.piezas.some(q => q.id === A.id) && e.piezas.some(q => q.id === B.id))) continue;  // ya llevan ensamble de macizo               // traseras y fondos finos, sin uniones
     if (A.grupo !== B.grupo && (movil(A) || movil(B))) continue;      // puertas y cajones no se unen al cuerpo
     let lado = 0;
     if (Math.abs(A[k] + A[DIM[k]] - B[k]) < tol) lado = 1; else if (Math.abs(B[k] + B[DIM[k]] - A[k]) < tol) lado = -1; else continue;
@@ -235,7 +236,7 @@ async function cargarProyecto(obj) {
   const base = proyectoVacio();
   P = Object.assign(base, obj); P.escena = Object.assign(escenaDefecto(), obj.escena || {});
   P.maderasUsuario = P.maderasUsuario || {}; P.bocetos = P.bocetos || {}; P.grupos = P.grupos || {};
-  P.vista = Object.assign({ abrir: 0, explosion: 0 }, obj.vista || {});
+  P.vista = Object.assign({ abrir: 0, explosion: 0 }, obj.vista || {}); P.ensambles = P.ensambles || [];
   P.piezas = (P.piezas || []).map(p => nuevaPieza(p));
   for (const g of Object.values(P.grupos)) g.mov = g.mov || { tipo: 'ninguno', valor: 0 };
   limpiarGrupos();

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ensambles · Boceto a Render 3D</title>
+<link rel="stylesheet" href="../css/estilo.css">
+<script>try{const t=localStorage.getItem('boceto3d.tema');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+.app{grid-template-columns:270px minmax(0,1fr) 300px}
+#vista{position:relative;background:var(--vista);overflow:hidden}
+#vista canvas{display:block;width:100%;height:100%}
+.vpie{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--borde);border-radius:8px;padding:6px 10px;box-shadow:var(--sombra)}
+.vpie input[type=range]{flex:1}
+.vtitulo{position:absolute;left:12px;top:10px;right:12px;pointer-events:none}
+.vtitulo b{font-size:16px}
+.vtitulo div{color:var(--suave);max-width:640px}
+.ens{border:1px solid var(--borde);border-radius:7px;padding:7px 9px;margin:0 0 6px;cursor:pointer;background:var(--panel)}
+.ens:hover{border-color:var(--acento)}
+.ens.sel{border-color:var(--acento);background:var(--acento2)}
+.ens b{display:block}
+.ens small{color:var(--suave)}
+.ens .num{float:right;color:var(--suave);font-size:11px}
+.ens.no{opacity:.55}
+.pz{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;margin-bottom:6px}
+.pz span{color:var(--suave)}
+.par{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:6px;align-items:center;margin:5px 0}
+.par label{display:flex;flex-direction:column;font-size:12px}
+.par label small{color:var(--suave)}
+.par input[type=range]{grid-column:1/3;margin:-2px 0 2px}
+.par input[type=number]{width:64px}
+.fijo{display:flex;justify-content:space-between;font-size:12px;margin:3px 0;color:var(--suave)}
+.fijo b{color:var(--texto)}
+.g{margin:10px 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--suave)}
+.chk{width:100%;border-collapse:collapse;font-size:12px}
+.chk td{border-top:1px solid var(--borde);padding:4px 2px;vertical-align:top}
+.chk td:first-child{color:var(--suave);width:40%}
+.ok{color:#2e8b57}.warn{color:#c77c00}
+.error{background:#fdecea;color:#a8322a;border:1px solid #f3b9b3;border-radius:6px;padding:6px 8px;margin:6px 0}
+.aviso2{background:#fff6e0;color:#7a5600;border:1px solid #f0d9a0;border-radius:6px;padding:6px 8px;margin:6px 0;font-size:12px}
+:root[data-theme="dark"] .error{background:#3a1f1d;color:#f0b1aa;border-color:#6b2f2a}
+:root[data-theme="dark"] .aviso2{background:#3a301a;color:#f0d9a0;border-color:#6b5a2a}
+.pie{padding:10px 12px;display:flex;gap:6px;border-top:1px solid var(--borde);background:var(--panel);position:sticky;bottom:0}
+.pie button{flex:1}
+.res{font-size:12px}
+.res li{margin:2px 0}
+</style>
+</head>
+<body>
+<header class="barra">
+  <div class="marca"><span class="logo">🪵</span><b>Ensambles</b><span class="autor">· para Boceto a Render 3D · versión de prueba</span></div>
+  <div class="grupo"><span id="estadoB" style="opacity:.75"></span></div>
+</header>
+<div class="app">
+  <aside class="panel">
+    <section>
+      <h3>Piezas de Boceto</h3>
+      <div id="piezas"><p class="nota">Abre esta página desde Boceto: selecciona las piezas de madera maciza que se unen y pulsa «🪵 Ensamble».</p></div>
+      <div id="avisosB"></div>
+    </section>
+    <section class="crece">
+      <h3>Ensambles posibles <span class="cuenta" id="nEns">0</span></h3>
+      <div id="lista" style="overflow:auto"></div>
+    </section>
+  </aside>
+  <main id="vista">
+    <div class="vtitulo"><b id="tit">—</b><div id="desc"></div></div>
+    <div class="vpie"><span>Montado</span><input type="range" id="explota" min="0" max="1" step="0.01" value="0.35"><span>Separado</span><button id="bEncuadre" title="Encuadrar">⤢</button></div>
+  </main>
+  <aside class="panel der">
+    <section>
+      <h3>Medidas</h3>
+      <div id="params"></div>
+      <div id="msg"></div>
+    </section>
+    <section>
+      <h3>Comprobación</h3>
+      <table class="chk" id="check"></table>
+      <p class="nota" id="nota" style="margin-top:8px"></p>
+    </section>
+    <section>
+      <h3>Qué cambia en Boceto</h3>
+      <ul class="res" id="resumen" style="padding-left:16px;margin:0"></ul>
+    </section>
+    <div style="flex:1"></div>
+    <div class="pie"><button id="bCancelar">Cancelar</button><button class="primario" id="bAplicar">✔ Aplicar en Boceto</button></div>
+  </aside>
+</div>
+<div class="aviso" id="aviso"></div>
+<script src="../js/three-bundle.js"></script>
+<script src="catalogo.js"></script>
+<script src="ensambles.js"></script>
+</body>
+</html>
