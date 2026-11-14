@@ -45,7 +45,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 
 <header class="port">
   <h1>Boceto a Render 3D</h1>
-  <p>Manual de uso · versión 3.4 · De un boceto a mano a una imagen realista del mueble, sin internet · Por Eloi A.A.</p>
+  <p>Manual de uso · versión 3.5 · De un boceto a mano a una imagen realista del mueble, sin internet · Por Eloi A.A.</p>
 </header>
 
 <div class="ind">
@@ -270,7 +270,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 <div class="dos">
   <div>
     <ul>
-      <li><b>Material</b>: maderas, melaminas, lacado del color que elijas, metales y cristal; además las maderas de tus fotos.</li>
+      <li><b>Material</b>: maderas, melaminas, lacado del color que elijas, metales y cristal; además las maderas de tus fotos. Las 16 maderas de la biblioteca llevan <b>veta real</b> (escaneados CC0 de Poly Haven, con color, relieve y rugosidad), tanto en la vista 3D como en el render.</li>
       <li><b>Acabado</b>: mate, satinado o brillo (barniz con reflejos).</li>
       <li><b>Dirección de la veta</b>: en automático sigue el lado más largo; cámbiala, por ejemplo, para que los frentes de cajón la tengan horizontal.</li>
       <li><b>Canto redondeado</b>: radio de la arista en mm. Un canto de 1 a 2 mm hace que la luz «brille» en las aristas.</li>
@@ -295,6 +295,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 <div class="dos">
   <div>
     <p>Con fotos de tableros reales el render gana mucho realismo. En <b>🪵 Maderas…</b> → <b>📷 Añadir madera desde foto…</b>:</p>
+    <p class="nota">¿No tienes fotos a mano? En <a href="https://ambientcg.com/list?q=wood&amp;type=material">ambientCG</a> y <a href="https://polyhaven.com/textures/wood">Poly Haven</a> hay texturas de madera libres (CC0): descarga la versión 2K en JPG y añade el archivo de color (<i>Color</i> / <i>diff</i>); ya es repetible, así que desmarca «Repetible sin costuras». El propio diálogo lleva estos enlaces.</p>
     <ul>
       <li>Usa una foto frontal, bien iluminada y con la <b>veta en horizontal</b> (o marca «Girar 90°»).</li>
       <li><b>Ancho real</b>: cuántos cm de tablero abarca la foto, para que la veta tenga su tamaño real.</li>
@@ -330,10 +331,11 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
   <div>
     <ol>
       <li>Encuadra el mueble en la vista 3D como quieras la foto (usa <b>Solo 3D</b> para verlo grande). Si quieres, abre cajones o explosiona.</li>
-      <li>Pulsa <b>📷 Render</b>, elige tamaño, proporción, calidad y desenfoque, y pulsa <b>Renderizar</b>.</li>
+      <li>Pulsa <b>📷 Render</b>, elige tamaño, proporción, <b>motor</b>, calidad y desenfoque, y pulsa <b>Renderizar</b>.</li>
       <li>Cuando termine, pulsa <b>💾 Guardar PNG</b>.</li>
     </ol>
-    <p>En cada <b>pasada</b> el programa mueve un poco la luz y la cámara y las promedia: sombras suaves, oscurecimiento en juntas y rincones, bordes limpios y, si lo has pedido, desenfoque. A más pasadas, más limpia queda la imagen; con desenfoque conviene usar «Alta · 200».</p>
+    <p><b>Motor Fotorrealista</b> (trazado de rayos): sigue el camino de la luz rebotando entre el mueble, el suelo y la pared, como en una foto: luz de relleno real, reflejos en el barniz, el metal y el cristal, sombras suaves y desenfoque de fondo de verdad. La imagen sale con «ruido» y se va limpiando en pantalla; la calidad marca cuánto se refina. Con una <b>gráfica modesta</b> (integradas Intel o Radeon) también funciona: va por trozos pequeños con pausas, tarda más, y el programa bloquea el 4K y las calidades altas a tamaños grandes (el propio diálogo lo avisa; para imágenes grandes, usa el motor Rápido).</p>
+    <p><b>Motor Rápido</b>: el de siempre. En cada <b>pasada</b> mueve un poco la luz y la cámara y las promedia: sombras suaves, oscurecimiento en juntas y rincones, bordes limpios y, si lo has pedido, desenfoque. A más pasadas, más limpia queda la imagen; con desenfoque conviene usar «Alta».</p>
   </div>
   <img src="img/dialogo_render.png" alt="Diálogo de render">
 </div>
@@ -438,7 +440,7 @@ footer{margin-top:18px;break-before:avoid;border-top:1px solid var(--b);padding-
 </ul>
 
 <footer>
-  Boceto a Render 3D — Por Eloi A.A. · Programa con licencia EUPL-1.2 · Manual con licencia CC BY-SA 4.0 · Usa Three.js (licencia MIT).
+  Boceto a Render 3D — Por Eloi A.A. · Programa con licencia EUPL-1.2 · Manual con licencia CC BY-SA 4.0 · Usa Three.js y three-gpu-pathtracer (licencia MIT) · Maderas escaneadas de Poly Haven (CC0).
 </footer>
 </div></body>
 </html>
