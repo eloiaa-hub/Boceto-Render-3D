@@ -16,7 +16,12 @@ function seleccionar(x, o) {
 
 /* ===================== LISTA ===================== */
 let ultimoMaterial = 'roble';
-function srcMadera(clave) { const m = infoMaterial(clave); return m.usuario ? datosMaderaFoto(clave).src : window.TEXTURAS[m.tex]; }
+function pbrMadera(m) { // "base": la textura toma el relieve, la rugosidad o el tamaño de otra (color recoloreado de la misma veta)
+  const B = window.TEXTURAS_PBR; if (m.usuario || !m.pbr || !B || !B[m.pbr]) return null;
+  const b = B[m.pbr], d = (b.base && B[b.base]) || b;
+  return { color: b.color, normal: b.normal || d.normal, rough: b.rough || d.rough, cm: b.cm || d.cm };
+}
+function srcMadera(clave) { const m = infoMaterial(clave), b = pbrMadera(m); return m.usuario ? datosMaderaFoto(clave).src : b ? b.color : window.TEXTURAS[m.tex || 'roble']; }
 function muestraCss(p) {
   const m = infoMaterial(p.material);
   if (m.tipo === 'madera') return `background-image:url(${srcMadera(p.material)})`;

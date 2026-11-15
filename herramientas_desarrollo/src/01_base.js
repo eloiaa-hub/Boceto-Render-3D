@@ -8,18 +8,27 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const T = window.THREE;
 const CLAVE_LS = 'boceto3d.proyecto';
-const VERSION = '3.4';
+const VERSION = '3.5';
 
 /* ===================== MATERIALES ===================== */
 const MATERIALES = {
-  roble:   { nombre: 'Roble', tipo: 'madera', tex: 'roble', hex: '#b88d5e' },
-  haya:    { nombre: 'Haya', tipo: 'madera', tex: 'haya', hex: '#d4a67e' },
-  pino:    { nombre: 'Pino', tipo: 'madera', tex: 'pino', hex: '#ddb77f' },
-  fresno:  { nombre: 'Fresno', tipo: 'madera', tex: 'fresno', hex: '#d5bd97' },
-  cerezo:  { nombre: 'Cerezo', tipo: 'madera', tex: 'cerezo', hex: '#a96a45' },
-  teca:    { nombre: 'Teca', tipo: 'madera', tex: 'teca', hex: '#99693d' },
-  nogal:   { nombre: 'Nogal', tipo: 'madera', tex: 'nogal', hex: '#6a4630' },
-  wengue:  { nombre: 'Wengué', tipo: 'madera', tex: 'wengue', hex: '#3b2a1f' },
+  roble:   { nombre: 'Roble', tipo: 'madera', tex: 'roble', pbr: 'roble', hex: '#a17e57' },
+  haya:    { nombre: 'Haya', tipo: 'madera', tex: 'haya', pbr: 'haya', hex: '#d4a67e' },
+  pino:    { nombre: 'Pino', tipo: 'madera', tex: 'pino', pbr: 'pino', hex: '#ddb77f' },
+  fresno:  { nombre: 'Fresno', tipo: 'madera', tex: 'fresno', pbr: 'fresno', hex: '#d5bd97' },
+  cerezo:  { nombre: 'Cerezo', tipo: 'madera', tex: 'cerezo', pbr: 'cerezo', hex: '#a96a45' },
+  teca:    { nombre: 'Teca', tipo: 'madera', tex: 'teca', pbr: 'teca', hex: '#99693d' },
+  nogal:   { nombre: 'Nogal', tipo: 'madera', tex: 'nogal', pbr: 'nogal', hex: '#9d7c61' },
+  wengue:  { nombre: 'Wengué', tipo: 'madera', tex: 'wengue', pbr: 'wengue', hex: '#3b2a1f' },
+  // maderas escaneadas (CC0, Poly Haven): color, relieve y rugosidad reales (assets/texturas/pbr)
+  arce:       { nombre: 'Arce', tipo: 'madera', pbr: 'arce', hex: '#e3d4b9' },
+  sapelli:    { nombre: 'Sapelli', tipo: 'madera', pbr: 'sapelli', hex: '#c68159' },
+  palisandro: { nombre: 'Palisandro', tipo: 'madera', pbr: 'palisandro', hex: '#6d3210' },
+  caoba:      { nombre: 'Caoba oscura', tipo: 'madera', pbr: 'caoba', hex: '#5d2a18' },
+  chapa_gris: { nombre: 'Chapa gris', tipo: 'madera', pbr: 'chapa_gris', hex: '#655f5f' },
+  cara_contrachapado: { nombre: 'Contrachapado (cara)', tipo: 'madera', pbr: 'cara_contrachapado', hex: '#7e6140' },
+  cerezo_lacado:  { nombre: 'Cerezo lacado oscuro', tipo: 'madera', pbr: 'cerezo_lacado', hex: '#2f1c0f' },
+  pino_barnizado: { nombre: 'Pino barnizado', tipo: 'madera', pbr: 'pino_barnizado', hex: '#683907' },
   melamina_blanca: { nombre: 'Melamina blanca', tipo: 'color', hex: '#f1f0ec', rough: .55 },
   melamina_gris:   { nombre: 'Melamina gris', tipo: 'color', hex: '#9a9c9e', rough: .6 },
   melamina_antracita: { nombre: 'Melamina antracita', tipo: 'color', hex: '#3a3c3f', rough: .6 },
@@ -147,9 +156,9 @@ function bbox(lista, excluir) {
   return b;
 }
 function bboxSel() { const L = seleccionadas(); return bbox(L.map(p => Object.assign({}, p, { visible: true }))); }
-function aviso(t) {
+function aviso(t, ms = 2600) {
   const a = $('#aviso'); a.textContent = t; a.classList.add('ver');
-  clearTimeout(aviso._t); aviso._t = setTimeout(() => a.classList.remove('ver'), 2600);
+  clearTimeout(aviso._t); aviso._t = setTimeout(() => a.classList.remove('ver'), ms);
 }
 function descargar(nombre, blob) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre;

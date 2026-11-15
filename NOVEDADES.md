@@ -1,5 +1,12 @@
 # Novedades de Boceto a Render 3D
 
+## v3.5
+- **Render fotorrealista con trazado de rayos**: en 📷 Render, el motor «Fotorrealista» sigue el camino de la luz rebotando entre el mueble, el suelo y la pared, como en una foto: luz de relleno real, reflejos en el barniz, el metal y el cristal, sombras suaves y desenfoque de fondo de verdad. La imagen se va limpiando en pantalla mientras avanza. El motor «Rápido» (el de siempre) sigue disponible.
+- Con una **gráfica modesta** (integradas Intel o Radeon), el render fotorrealista se adapta: va por trozos pequeños con pausas y se bloquean el 4K y las calidades altas a tamaños grandes; el programa lo avisa en el propio diálogo.
+- **Maderas con veta real**: 10 maderas escaneadas de Poly Haven (CC0), con color, relieve y rugosidad de verdad, en la vista 3D y en el render: roble, nogal, arce, sapelli, palisandro, caoba oscura, chapa gris, contrachapado (cara), cerezo lacado oscuro y pino barnizado.
+- Las 6 maderas de siempre (**haya, pino, fresno, cerezo, teca y wengué**) también llevan ahora veta real: el color de un escaneado parecido recoloreado a su tono, compartiendo el relieve y la rugosidad para no engordar el programa (assets/texturas/pbr, con su LEEME).
+- En 🪵 Maderas… → Añadir madera desde foto, **enlaces a ambientCG y Poly Haven** para descargar texturas de madera libres (CC0).
+
 ## v3.4
 - ▱ **MUEBLECAD 2D**: el mueble pasa a un plano de taller con dos láminas A3: vistas de conjunto (alzado, planta y perfil, con aristas ocultas y apertura de puertas) y las piezas desplegadas como piezas de tablero (material, alma, grueso, veta, cantos y contorno), listas para añadir herrajes y taladros, acotar y sacar el despiece.
 - **Grueso del canto en cada lado** (sin canto, 0,4, 0,8, 1, 2 o 3 mm): se ve en el 3D (sin canto enseña el alma) y pasa al despiece, al Anidador y a MUEBLECAD.

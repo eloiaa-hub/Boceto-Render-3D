@@ -1,6 +1,6 @@
 # Boceto a Render 3D y MUEBLECAD 2D — Por Eloi A.A.
 
-**Boceto a Render 3D versión 3.4** · **MUEBLECAD 2D v4** · novedades en [NOVEDADES.md](NOVEDADES.md)
+**Boceto a Render 3D versión 3.5** · **MUEBLECAD 2D v4** · novedades en [NOVEDADES.md](NOVEDADES.md)
 
 **Portada en línea:** <https://eloiaa-hub.github.io/Boceto-Render-3D/>
 
@@ -66,3 +66,4 @@ Programa de CAD 2D para muebles, también independiente (`assets/mueblecad/muebl
 - Programa: **EUPL-1.2** (archivo [`LICENSE`](LICENSE)).
 - Manuales: **CC BY-SA 4.0** (archivo [`LICENCIA-MANUAL.txt`](LICENCIA-MANUAL.txt)).
 - Three.js: licencia MIT (`assets/js/three-LICENSE.txt`).
+- three-gpu-pathtracer y three-mesh-bvh (trazado de rayos del render): licencia MIT (`assets/js/three-gpu-pathtracer-LICENSE.txt`, `assets/js/three-mesh-bvh-LICENSE.txt`).

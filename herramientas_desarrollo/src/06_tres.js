@@ -12,8 +12,46 @@ camara.position.set(160, 110, 190);
 const controles = new T.OrbitControls(camara, c3d);
 controles.enableDamping = true; controles.dampingFactor = .12; controles.target.set(25, 30, 20);
 controles.maxPolarAngle = Math.PI * .495;
-const pmrem = new T.PMREMGenerator(renderer);
+// ¿Gráfica modesta? Las integradas (Intel UHD/Iris, Radeon integrada…) van varias veces más lentas en el trazado de rayos
+const GPU = (() => {
+  let nombre = '';
+  try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); nombre = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (e) {}
+  nombre = String(nombre || '');
+  const partes = nombre.replace(/^ANGLE \(|\)$/g, '').split(','), limpio = (partes.length > 1 ? partes[1] : partes[0])
+    .replace(/\(0x[0-9a-f]+\)/i, '').replace(/\s*(Direct3D|OpenGL|Vulkan|Metal).*$/i, '');
+  const modesta = /Intel|UHD|Iris|HD Graphics|Radeon\(TM\) Graphics|Radeon Graphics|Radeon Vega|Vega \d+ Graphics|Mali|Adreno|PowerVR|SwiftShader|llvmpipe|Basic Render|Software/i.test(nombre)
+    && !/Arc\b|Arc\(TM\)/i.test(nombre); // las Intel Arc son dedicadas
+  return { nombre: limpio.trim() || nombre || 'desconocida', modesta };
+})();
+let pmrem = new T.PMREMGenerator(renderer);
 escena.environment = pmrem.fromScene(new T.RoomEnvironment(), .04).texture;
+// Si la tarjeta gráfica se reinicia (render muy pesado, Windows corta la GPU a los ~2 s), el navegador pierde
+// TODOS los contextos WebGL y la vista 3D queda en blanco. Three.js recupera el contexto; aquí se rehace el entorno.
+let contexto3DPerdido = false, tRecup = null;
+c3d.addEventListener('webglcontextlost', e => {
+  e.preventDefault(); contexto3DPerdido = true;
+  clearTimeout(tRecup);
+  tRecup = setTimeout(() => { if (contexto3DPerdido) avisoGPU(); }, 3000);
+});
+function avisoGPU() { // el navegador no devuelve la tarjeta gráfica: sin vista 3D, lo único seguro es recargar (el proyecto se guarda antes)
+  try { guardarLocal(); } catch (e) {}
+  modal('La tarjeta gráfica se ha reiniciado', `<p>El render ha pedido a la tarjeta gráfica más de lo que podía hacer de golpe y Windows la ha reiniciado. El navegador no ha devuelto la vista 3D, y sin ella muchas opciones no funcionan bien.</p>
+    <p><b>Recarga el programa</b>: el proyecto ya está guardado en este navegador y se abre tal como estaba.</p>
+    <p class="nota">Para el próximo render fotorrealista, prueba un tamaño menor (1280 px) o la calidad «Borrador», o usa el motor «Rápido».</p>`, [
+    { txt: 'Seguir sin vista 3D' },
+    { txt: '🔄 Recargar el programa', primario: true, fn: () => { try { guardarLocal(); } catch (e) {} location.reload(); } }]);
+}
+c3d.addEventListener('webglcontextrestored', () => {
+  contexto3DPerdido = false; clearTimeout(tRecup);
+  setTimeout(() => {
+    const viejo = escena.environment;
+    pmrem = new T.PMREMGenerator(renderer);
+    if (viejo && escena.environment === viejo) escena.environment = pmrem.fromScene(new T.RoomEnvironment(), .04).texture;
+    escena.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; ms.forEach(m => { m.needsUpdate = true; for (const k in m) if (m[k] && m[k].isTexture) m[k].needsUpdate = true; }); });
+    renderer.shadowMap.needsUpdate = true; ajustar3D(); render3D();
+    aviso('La tarjeta gráfica se ha reiniciado; la vista 3D se ha recuperado.');
+  }, 50);
+});
 
 const luzPrincipal = new T.DirectionalLight(0xfff4e8, 1.6);
 luzPrincipal.castShadow = true; luzPrincipal.shadow.mapSize.set(2048, 2048);
@@ -38,10 +76,10 @@ function texturaContacto() {
 
 // ---------- texturas y materiales ----------
 const cacheTex = {};
-function textura(src, ruta) {
+function textura(src, ruta, datos) { // datos: mapa de relieve o rugosidad (sin espacio de color)
   if (cacheTex[ruta]) return cacheTex[ruta];
   const t = new T.TextureLoader().load(src, () => render3D());
-  t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping;
+  t.colorSpace = datos ? T.NoColorSpace : T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return cacheTex[ruta] = t;
 }
@@ -57,8 +95,12 @@ function crearMaterial(clave, acabado, color) {
   const rough = { mate: .78, satinado: .5, brillo: .32 }[acabado] ?? .5;
   let mat;
   if (m.tipo === 'madera') {
-    const tx = textura(srcMadera(clave), clave);
-    mat = new T.MeshPhysicalMaterial({ map: tx, bumpMap: tx, bumpScale: .12, roughness: rough, specularIntensity: .45 });
+    const tx = textura(srcMadera(clave), clave), b = pbrMadera(m);
+    if (b) { // madera escaneada: la rugosidad del mapa se escala con el acabado
+      mat = new T.MeshPhysicalMaterial({ map: tx, normalMap: textura(b.normal, clave + ':n', true), roughnessMap: textura(b.rough, clave + ':r', true),
+        roughness: { mate: 1.25, satinado: .9, brillo: .6 }[acabado] ?? .9, specularIntensity: .5 });
+      mat.normalScale.set(1, 1);
+    } else mat = new T.MeshPhysicalMaterial({ map: tx, bumpMap: tx, bumpScale: .12, roughness: rough, specularIntensity: .45 });
     if (acabado === 'brillo') { mat.clearcoat = 1; mat.clearcoatRoughness = .06; }
     if (acabado === 'satinado') { mat.clearcoat = .3; mat.clearcoatRoughness = .35; }
   } else if (m.tipo === 'color' || m.tipo === 'lacado') {
@@ -72,7 +114,8 @@ function crearMaterial(clave, acabado, color) {
     mat = new T.MeshPhysicalMaterial({ color: new T.Color(m.hex), metalness: 0, roughness: .03, transmission: .94, thickness: .6, ior: 1.5, transparent: true, opacity: 1 });
   }
   const u = m.usuario ? datosMaderaFoto(clave) : null;
-  mat.userData.cm = u ? u.cm : TEX_CM; mat.userData.cmV = u ? (u.cmV || u.cm) : TEX_CM;
+  const bp = pbrMadera(m), cmLib = bp ? bp.cm : TEX_CM;
+  mat.userData.cm = u ? u.cm : cmLib; mat.userData.cmV = u ? (u.cmV || u.cm) : cmLib;
   return cacheMat[ck] = mat;
 }
 function material(p) { return crearMaterial(p.material, p.acabado, p.color); }
@@ -410,18 +453,37 @@ function pintarEscena() {
 $('#bRender').onclick = () => {
   if (!P.piezas.some(p => p.visible)) return aviso('No hay piezas que renderizar');
   const r = $('#v3d').getBoundingClientRect(), asp = r.width / r.height;
-  modal('Render final', formulario([
-    { id: 'tam', et: 'Tamaño', v: '1920', sel: [['1280', 'Rápido · 1280 px'], ['1920', 'Full HD · 1920 px'], ['2560', '2560 px'], ['3840', '4K · 3840 px']] },
+  const avisoGraf = GPU.modesta ? `<p class="aviso-gpu">⚠️ <b>Este ordenador no tiene una gráfica potente</b> (${esc(GPU.nombre)}). El render fotorrealista se adapta a ella (va por trozos pequeños, con pausas, para que Windows no la reinicie), pero tarda más. Se bloquean el 4K y la calidad Alta o Máxima a partir de 1920 px. Para imágenes grandes, usa el motor «Rápido».</p>` : '';
+  modal('Render final', avisoGraf + formulario([
+    { id: 'tam', et: 'Tamaño', v: GPU.modesta ? '1280' : '1920', sel: [['1280', 'Rápido · 1280 px'], ['1920', 'Full HD · 1920 px'], ['2560', '2560 px'], ['3840', '4K · 3840 px']] },
     { id: 'form', et: 'Proporción', v: 'vista', sel: [['vista', 'Igual que la vista 3D'], ['1.5', '3:2 horizontal'], ['1.7778', '16:9 horizontal'], ['1', 'Cuadrada'], ['0.8', '4:5 vertical']] },
-    { id: 'q', et: 'Calidad (pasadas)', v: P.escena.dof > 0 ? '200' : '96', sel: [['32', 'Borrador · 32'], ['96', 'Buena · 96'], ['200', 'Alta · 200'], ['400', 'Máxima · 400']] },
+    { id: 'motor', et: 'Motor', v: P.escena.motor || 'foto', sel: [['foto', 'Fotorrealista'], ['rapido', 'Rápido']] },
+    { id: 'q', et: 'Calidad', v: '1', sel: [['0', 'Borrador'], ['1', 'Buena'], ['2', 'Alta'], ['3', 'Máxima']] },
     { id: 'dof', et: 'Desenfoque de fondo', v: String(P.escena.dof || 0), sel: [['0', 'No'], ['8', 'Suave (f/8)'], ['4', 'Medio (f/4)'], ['2.8', 'Marcado (f/2,8)'], ['1.4', 'Muy marcado (f/1,4)']] }]) +
-    `<p class="nota">Cada pasada mueve un poco la luz y la cámara y se promedian: así salen sombras suaves, oclusión en las juntas y bordes sin dientes. Con desenfoque, la cámara se mueve dentro de la «apertura» del objetivo y se enfoca el centro del mueble. Se usa el encuadre de la vista 3D, con puertas y explosión tal como estén.</p>`, [
+    `<p class="nota"><b>Fotorrealista</b>: sigue el camino de la luz rebotando entre el mueble, el suelo y la pared, como en una foto: luz de relleno real, reflejos en barniz, metal y cristal, y sombras suaves. La imagen se va limpiando mientras ves cómo avanza; puedes terminar antes con «Terminar ya». Necesita una tarjeta gráfica decente: en un ordenador lento, empieza por «Borrador».</p>
+     <p class="nota"><b>Rápido</b>: el render de siempre; promedia pasadas moviendo un poco la luz y la cámara. Se usa el encuadre de la vista 3D, con puertas y explosión tal como estén.</p>
+     <p class="nota" id="notaBloq" style="display:none"></p>`, [
     { txt: 'Cancelar' },
     { txt: 'Renderizar', primario: true, fn: () => {
-      const w = parseInt(fv('tam')), f = fv('form') === 'vista' ? asp : parseFloat(fv('form')), q = parseInt(fv('q'));
-      P.escena.dof = parseFloat(fv('dof')); $('#eDof').value = P.escena.dof; guardarLocalPronto();
-      setTimeout(() => renderFinal(w, Math.round(w / f), q), 30);
+      const w = parseInt(fv('tam')), f = fv('form') === 'vista' ? asp : parseFloat(fv('form')), qi = parseInt(fv('q')), motor = fv('motor');
+      P.escena.dof = parseFloat(fv('dof')); $('#eDof').value = P.escena.dof; P.escena.motor = motor; guardarLocalPronto();
+      const N = (motor === 'foto' ? [64, 256, 600, 1200] : P.escena.dof > 0 ? [64, 200, 400, 600] : [32, 96, 200, 400])[qi];
+      setTimeout(() => motor === 'foto' ? renderFoto(w, Math.round(w / f), N) : renderFinal(w, Math.round(w / f), N), 30);
     } }]);
+  if (GPU.modesta) { // con gráfica modesta y motor fotorrealista: fuera el 4K y la calidad Alta/Máxima desde 1920 px
+    const sT = $('#f_tam'), sQ = $('#f_q'), sM = $('#f_motor');
+    const ajustar = () => {
+      const foto = sM.value === 'foto';
+      for (const o of sT.options) o.disabled = foto && o.value === '3840';
+      if (foto && sT.value === '3840') sT.value = '1920';
+      const grande = foto && parseInt(sT.value) >= 1920;
+      for (const o of sQ.options) o.disabled = grande && parseInt(o.value) >= 2;
+      if (grande && parseInt(sQ.value) >= 2) sQ.value = '1';
+      const n = $('#notaBloq'); n.style.display = foto ? '' : 'none';
+      n.innerHTML = '🔒 Bloqueado con esta gráfica en el fotorrealista: 4K' + (grande ? ' y calidad Alta o Máxima a este tamaño (bájalo a 1280 px para poder elegirlas).' : '.');
+    };
+    sT.onchange = sQ.onchange = sM.onchange = ajustar; ajustar();
+  }
 };
 
 async function renderFinal(W, H, N) {
@@ -500,5 +562,162 @@ async function renderFinal(W, H, N) {
   } finally {
     r2.dispose(); r2.forceContextLoss && r2.forceContextLoss();
     renderFinalActivo = false; render3D();
+  }
+}
+
+/* ---------- render fotorrealista: trazado de rayos (three-gpu-pathtracer) ---------- */
+// Estudio sin fin: suelo que sube en curva detrás del mueble, como el fondo de papel de un fotógrafo.
+function cicloramaGeom(c, r, dirAtras) {
+  const lat = new T.Vector3(-dirAtras.z, 0, dirAtras.x), F = r * 14, s0 = r * 1.15, R = r * 2.2, H = r * 9, A = r * 24;
+  const perfil = [[-F, 0], [s0, 0]];
+  for (let i = 1; i <= 16; i++) { const t = i / 16 * Math.PI / 2; perfil.push([s0 + R * Math.sin(t), R - R * Math.cos(t)]); }
+  perfil.push([s0 + R, H]);
+  const nx = 8, pos = [], idx = [];
+  perfil.forEach(([sp, y]) => { for (let i = 0; i <= nx; i++) { const x = (i / nx - .5) * A; pos.push(c.x + lat.x * x + dirAtras.x * sp, y, c.z + lat.z * x + dirAtras.z * sp); } });
+  for (let j = 0; j < perfil.length - 1; j++) for (let i = 0; i < nx; i++) {
+    const a = j * (nx + 1) + i, b = a + 1, d = a + nx + 1, e = d + 1; idx.push(a, b, d, b, e, d); // caras hacia arriba y hacia el mueble
+  }
+  const uv = []; perfil.forEach((_, j) => { for (let i = 0; i <= nx; i++) uv.push(i / nx, j / (perfil.length - 1)); });
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+function tangentesSeguras(g) { // tangentes calculadas y sin valores rotos (UV degeneradas): si no, el trazador da píxeles negros
+  if (!g.index || !g.attributes.uv || !g.attributes.normal) return;
+  try { g.computeTangents(); } catch (e) { g.setAttribute('tangent', new T.BufferAttribute(new Float32Array(g.attributes.position.count * 4), 4)); }
+  const t = g.attributes.tangent, n = g.attributes.normal, v = new T.Vector3(), nn = new T.Vector3();
+  for (let i = 0; i < t.count; i++) {
+    v.set(t.getX(i), t.getY(i), t.getZ(i)); nn.set(n.getX(i), n.getY(i), n.getZ(i));
+    if (!isFinite(v.x + v.y + v.z) || v.lengthSq() < 1e-10) {
+      v.set(1, 0, 0); if (Math.abs(nn.x) > .9) v.set(0, 1, 0);
+      v.sub(nn.clone().multiplyScalar(v.dot(nn))).normalize(); t.setXYZW(i, v.x, v.y, v.z, 1);
+    } else if (!isFinite(t.getW(i)) || t.getW(i) === 0) t.setW(i, 1);
+  }
+}
+function entornoCubo(r2) { // el trazador no lee el entorno PMREM: el mismo estudio (RoomEnvironment) en un cubo
+  const rt = new T.WebGLCubeRenderTarget(512, { type: T.HalfFloatType }), cc = new T.CubeCamera(.1, 100, rt), sala = new T.RoomEnvironment();
+  cc.update(r2, sala); sala.traverse(o => { o.geometry && o.geometry.dispose(); o.material && o.material.dispose && o.material.dispose(); });
+  return rt;
+}
+async function renderFoto(W, H, N) {
+  let cancelar = false, terminar = false;
+  modal('Render fotorrealista…', `<canvas id="cvFoto" class="render"></canvas><div class="progreso"><div id="barra"></div></div><p class="nota" id="txtProg">Preparando la escena…</p>`, [
+    { txt: 'Cancelar', fn: () => { cancelar = true; } },
+    { txt: 'Terminar ya', primario: true, mantener: true, fn: () => { terminar = true; } }], 'min(980px,96vw)');
+  renderFinalActivo = true;
+  const t0 = performance.now(), cv = $('#cvFoto');
+  cv.style.cssText = 'width:100%;height:auto;max-height:60vh;object-fit:contain;display:block;margin:auto;border-radius:6px;background:#888';
+  let gpuPerdida = false;
+  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); gpuPerdida = true; });
+  const r2 = new T.WebGLRenderer({ canvas: cv, antialias: false, preserveDrawingBuffer: true });
+  const E = P.escena, guardado = [];
+  const ocultar = o => { guardado.push([o, o.visible]); o.visible = false; };
+  const envAnt = escena.environment, intAnt = escena.environmentIntensity, fondoAnt = escena.background;
+  let pt = null, cubo = null, extras = [];
+  const geomAnt = [];
+  try {
+    r2.setPixelRatio(1); r2.setSize(W, H, false);
+    r2.toneMapping = renderer.toneMapping; r2.toneMappingExposure = renderer.toneMappingExposure; r2.outputColorSpace = T.SRGBColorSpace;
+    const { c, r } = radioEscena();
+    // cámara física, con el encuadre de la vista 3D
+    const cam = new T.PhysicalCamera(); cam.copy(camara); cam.aspect = W / H; cam.updateProjectionMatrix();
+    cam.fStop = Infinity; // sin desenfoque (bokeh = 0)
+    if (E.dof > 0) { cam.bokehSize = E.lente / E.dof * 100; cam.focusDistance = cam.position.distanceTo(controles.target); cam.apertureBlades = 7; }
+    cam.updateMatrixWorld();
+    // el trazador solo admite un material por malla: las piezas (caras, cantos, alma) se reparten en una malla por material
+    ocultar(grupoAyudas); ocultar(sombraSuelo); ocultar(contacto); ocultar(luzPrincipal); ocultar(luzCielo);
+    const multi = [], porMat = new Map(); // material -> trozos de geometría en coordenadas de mundo
+    escena.updateMatrixWorld(true);
+    grupoPiezas.traverseVisible(o => { if (o.isMesh && o.geometry) multi.push(o); });
+    for (const o of multi) {
+      const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      g.applyMatrix4(o.matrixWorld);
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      const grupos = Array.isArray(o.material) && o.geometry.groups.length ? o.geometry.groups : [{ start: 0, count: g.attributes.position.count, materialIndex: 0 }];
+      for (const gr of grupos) {
+        const mat = mats[gr.materialIndex]; if (!mat || gr.count <= 0) continue;
+        const n = Math.min(gr.count, g.attributes.position.count - gr.start), trozo = {};
+        for (const k of ['position', 'normal', 'uv']) { const at = g.attributes[k]; if (at) trozo[k] = at.array.slice(gr.start * at.itemSize, (gr.start + n) * at.itemSize); }
+        if (!trozo.uv) trozo.uv = new Float32Array(n * 2);
+        if (!porMat.has(mat)) porMat.set(mat, []); porMat.get(mat).push(trozo);
+      }
+      g.dispose(); ocultar(o);
+    }
+    for (const [mat, trozos] of porMat) { // una malla por material: menos materiales y menos objetos para el trazador
+      const geo = new T.BufferGeometry();
+      for (const [k, tam] of [['position', 3], ['normal', 3], ['uv', 2]]) {
+        const tot = trozos.reduce((a, t) => a + t[k].length, 0), arr = new Float32Array(tot); let off = 0;
+        for (const t of trozos) { arr.set(t[k], off); off += t[k].length; }
+        geo.setAttribute(k, new T.BufferAttribute(arr, tam));
+      }
+      const nv = geo.attributes.position.count, ind = new Uint32Array(nv); for (let i = 0; i < nv; i++) ind[i] = i;
+      geo.setIndex(new T.BufferAttribute(ind, 1)); // con índice, como el resto de geometrías de la escena
+      tangentesSeguras(geo);
+      const m = new T.Mesh(geo, mat); escena.add(m); extras.push(m);
+    }
+    // a las mallas del decorado con un solo material se les quitan los grupos (el trazador cuenta un material por grupo)
+    escena.traverseVisible(o => { if (o.isMesh && !Array.isArray(o.material) && o.geometry.groups.length && !extras.includes(o)) { const g = o.geometry.clone(); g.clearGroups(); geomAnt.push([o, o.geometry]); o.geometry = g; } });
+    // escena: fuera ayudas, sombras falsas y luces del rasterizado
+    const dirAtras = controles.target.clone().sub(camara.position).setY(0); if (dirAtras.lengthSq() < 1e-6) dirAtras.set(0, 0, -1); dirAtras.normalize();
+    if (E.escenario !== 'salon') {
+      const ciclo = new T.Mesh(cicloramaGeom(c, r, dirAtras), new T.MeshStandardMaterial({ color: new T.Color(E.fondo), roughness: .9 }));
+      tangentesSeguras(ciclo.geometry); ciclo.userData.propio = true; escena.add(ciclo); extras.push(ciclo);
+    }
+    // luz principal: ventana de luz (área) tan grande como pida la suavidad, en la dirección elegida
+    const dir = dirLuz(E.azimut, E.altura), dist = r * 4, ang = .03 + E.suave * .28, lado = Math.max(1, 2 * dist * Math.tan(ang));
+    const Ed = E.intens * 1.5; // algo más que la luz direccional de la vista 3D, para que se note la sombra
+    const area = new T.RectAreaLight(0xfff4e8, Ed * dist * dist / (lado * lado), lado, lado);
+    area.position.copy(c).addScaledVector(dir, dist); area.lookAt(c); escena.add(area); extras.push(area);
+    // entorno de estudio para el relleno y los reflejos; el fondo, del color del escenario
+    cubo = entornoCubo(r2);
+    escena.environment = cubo.texture; escena.environmentIntensity = E.amb * .55; // menos relleno que en la vista 3D: sombra del mueble más marcada
+    escena.background = new T.Color(E.fondo);
+    pt = new T.WebGLPathTracer(r2);
+    pt.renderToCanvas = false; pt.rasterizeScene = false; pt.renderDelay = 0; pt.minSamples = 0; pt.fadeDuration = 0;
+    pt.bounces = GPU.modesta ? 4 : 6; pt.transmissiveBounces = GPU.modesta ? 6 : 8; // pocos rebotes más apenas se notan pt.filterGlossyFactor = .5; pt.multipleImportanceSampling = true;
+    const tt = Math.max(W, H) >= 1800 && !GPU.modesta ? 2048 : 1024; pt.textureSize.set(tt, tt); // texturas a la medida de la imagen: menos grano en renders pequeños
+    // por trozos (cada uno ≈ 0,15 Mpx): cada orden a la GPU dura poco y Windows no la reinicia por tardar demasiado
+    // con gráfica modesta, trozos más pequeños (≈ 0,05 Mpx) y una pausa entre trozo y trozo
+    const nt = Math.min(GPU.modesta ? 12 : 8, Math.max(2, Math.ceil(Math.sqrt(W * H / (GPU.modesta ? 50000 : 150000))))); pt.tiles.set(nt, nt);
+    $('#txtProg').textContent = 'Preparando la escena (geometría y materiales)…';
+    await new Promise(res => setTimeout(res, 30));
+    pt.setScene(escena, cam);
+    const ortho = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1), mq = new T.MeshBasicMaterial({ map: pt.target.texture, toneMapped: true, depthTest: false, depthWrite: false });
+    const escQ = new T.Scene(); escQ.add(new T.Mesh(new T.PlaneGeometry(2, 2), mq));
+    const pintar = () => { r2.setRenderTarget(null); r2.render(escQ, ortho); };
+    let ultimo = 0;
+    $('#txtProg').textContent = 'Compilando el trazador en la tarjeta gráfica (la primera vez puede tardar)…';
+    await new Promise(res => setTimeout(res, 30));
+    const gl2 = r2.getContext(), perdida = () => gpuPerdida || gl2.isContextLost() || contexto3DPerdido;
+    while (pt.samples < N && !cancelar && !terminar && !perdida()) {
+      pt.renderSample();
+      if (GPU.modesta) { gl2.finish(); await new Promise(res => setTimeout(res, 6)); } // que la gráfica termine y respire antes del siguiente trozo
+      const ahora = performance.now();
+      if (ahora - ultimo > 250) {
+        ultimo = ahora; mq.map = pt.target.texture; pintar();
+        const pct = Math.min(1, pt.samples / N), t = (ahora - t0) / 1000;
+        $('#barra').style.width = (pct * 100) + '%';
+        $('#txtProg').textContent = `Muestras ${Math.floor(pt.samples)} de ${N}` + (pct > .02 ? ` · quedan ~${Math.max(0, Math.round(t / pct - t))} s` : '');
+        await new Promise(res => setTimeout(res, 0));
+      }
+    }
+    if (perdida()) { gpuPerdida = true; throw new Error('la tarjeta gráfica se ha reiniciado (demasiado trabajo de golpe)'); }
+    if (cancelar || pt.samples < 1) { cerrarModal(); aviso('Render cancelado'); return; }
+    mq.map = pt.target.texture; pintar();
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const url = URL.createObjectURL(blob), seg = ((performance.now() - t0) / 1000).toFixed(0), m = Math.floor(pt.samples);
+    const nombre = (P.nombre || 'render').replace(/[^\w\-áéíóúñÁÉÍÓÚÑ ]/g, '') + `_${W}x${H}.png`;
+    modal(`Render fotorrealista · ${W} × ${H} px · ${m} muestras · ${seg} s`, `<img class="render" src="${url}" alt="Render">`, [
+      { txt: 'Cerrar' }, { txt: '💾 Guardar PNG', primario: true, mantener: true, fn: () => descargar(nombre, blob) }]);
+  } catch (err) {
+    console.error(err); cerrarModal();
+    if (!contexto3DPerdido) aviso('Error en el render fotorrealista: ' + err.message + '. Prueba un tamaño menor, calidad «Borrador» o el motor «Rápido».', 8000);
+  } finally {
+    for (const o of extras) { o.parent && o.parent.remove(o); o.geometry && o.geometry.dispose(); if (o.userData.propio) { o.material && o.material.dispose(); } o.dispose && o.dispose(); }
+    for (const [o, v] of guardado) o.visible = v;
+    for (const [o, g] of geomAnt) { o.geometry.dispose(); o.geometry = g; }
+    escena.environment = envAnt; escena.environmentIntensity = intAnt; escena.background = fondoAnt;
+    if (pt) pt.dispose(); if (cubo) cubo.dispose();
+    r2.dispose(); r2.forceContextLoss && r2.forceContextLoss();
+    renderFinalActivo = false; colocarLuces(); decorado(); render3D();
   }
 }

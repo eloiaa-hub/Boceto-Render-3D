@@ -1,0 +1,35 @@
+Maderas escaneadas de Boceto a Render 3D
+=========================================
+
+Cada archivo .js lleva una madera con tres mapas embebidos (para que funcione al abrir el
+HTML con doble clic): color (2048 px), relieve o normal (1024 px) y rugosidad (1024 px).
+Las texturas con la veta en vertical se han girado para dejarla en horizontal.
+
+Origen: Poly Haven (https://polyhaven.com), licencia CC0 1.0 (dominio público).
+Se pueden usar, modificar y redistribuir sin pedir permiso ni citar al autor.
+
+Archivo                     Textura original
+nogal.js                    black_walnut_veneer_02
+roble.js                    oak_veneer_01
+arce.js                     white_maple_veneer
+sapelli.js                  sapele_veneer (relieve calculado del desplazamiento)
+palisandro.js               rosewood_veneer1
+caoba.js                    dark_wood
+chapa_gris.js               european_walnut_veneer_05
+cara_contrachapado.js       plywood
+cerezo_lacado.js            lacquered_cherry_wood
+pino_barnizado.js           coated_pine
+
+Maderas derivadas (sin escaneado propio): el color es el de otra textura de esta carpeta
+recoloreado al tono de la madera de la biblioteca (igualación de histograma; el pino, por
+rampa de luminancia para conservar los nudos). El relieve y la rugosidad se comparten con
+la textura de origen (clave "base" en el .js), para no duplicar datos. Se regeneran con
+herramientas_desarrollo/recolorear_maderas.py.
+
+Archivo        Color derivado de            Relieve y rugosidad
+haya.js        white_maple_veneer (arce)    arce.js
+fresno.js      oak_veneer_01 (roble)        roble.js
+pino.js        coated_pine                  pino_barnizado.js
+cerezo.js      sapele_veneer (sapelli)      sapelli.js
+teca.js        black_walnut_veneer (nogal)  nogal.js
+wengue.js      rosewood_veneer1             palisandro.js

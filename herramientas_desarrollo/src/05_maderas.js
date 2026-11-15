@@ -126,7 +126,8 @@ function gestorMaderas() {
     sec('Mi biblioteca (este ordenador)', BIBLIO, 'biblio', 'Vacía. Las fotos que añadas se guardan aquí para todos tus proyectos.');
     sec('En este proyecto', P.maderasUsuario, 'proyecto', 'Ninguna.');
     sec('Del aula (archivo assets/texturas/maderas_aula.js)', AULA, 'aula', 'Ninguna. Exporta tu biblioteca y copia el archivo en esa carpeta para que la tengan todos los ordenadores.');
-    $('#mCuerpo').innerHTML = `<div class="col2"><button id="bAñadirFoto" class="primario">📷 Añadir madera desde foto…</button><button id="bExpAula">⬇ Exportar para el aula</button></div>` + h;
+    const libres = `<p class="nota enlaces">🌐 Texturas de madera libres (CC0, uso sin restricciones) para descargar: <a href="https://ambientcg.com/list?q=wood&type=material" target="_blank" rel="noopener">ambientCG</a> · <a href="https://polyhaven.com/textures/wood" target="_blank" rel="noopener">Poly Haven</a>. Descarga la versión 2K (JPG) y añade el archivo de color (<i>Color</i> / <i>diff</i>) con «Añadir madera desde foto»; ya es repetible, así que desmarca «Repetible sin costuras».</p>`;
+    $('#mCuerpo').innerHTML = `<div class="col2"><button id="bAñadirFoto" class="primario">📷 Añadir madera desde foto…</button><button id="bExpAula">⬇ Exportar para el aula</button></div>` + libres + h;
     $('#bAñadirFoto').onclick = () => { cerrarModal(); añadirMaderaFoto(); };
     $('#bExpAula').onclick = () => {
       const todas = Object.assign({}, AULA, BIBLIO);

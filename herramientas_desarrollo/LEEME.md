@@ -2,6 +2,16 @@
 
 No hacen falta para usar el programa: solo para cambiarlo.
 
+**Ojo desde la v3.5**: los cambios se hacen directamente sobre `assets/js/app.js`; las partes de
+`src` se quedaron en la v3.4. No ejecutes `construir.sh` / `construir.bat` sin ponerlas antes al día,
+porque machacaría el app.js actual. `npm install` + `npm run three` sí está al día: `entry.js` incluye
+three-gpu-pathtracer y three-mesh-bvh (el trazador de rayos del render) con versiones fijas, y genera un
+`three-bundle.js` idéntico al publicado.
+
+| Archivo | Para qué |
+|---|---|
+| `recolorear_maderas.py` | Regenera las 6 maderas derivadas de `assets/texturas/pbr` (haya, fresno, pino, cerezo, teca, wengue) recoloreando los escaneados CC0 (necesita Pillow y numpy) |
+
 | Archivo | Para qué |
 |---|---|
 | `src/01_base.js` … `src/09_inicio.js` | El código del programa en partes. `assets/js/app.js` es su unión, en orden |
