@@ -66,3 +66,4 @@ Programa de CAD 2D para muebles, también independiente (`assets/mueblecad/muebl
 - Programa: **EUPL-1.2** (archivo [`LICENSE`](LICENSE)).
 - Manuales: **CC BY-SA 4.0** (archivo [`LICENCIA-MANUAL.txt`](LICENCIA-MANUAL.txt)).
 - Three.js: licencia MIT (`assets/js/three-LICENSE.txt`).
+- three-gpu-pathtracer y three-mesh-bvh (trazado de rayos del render): licencia MIT (`assets/js/three-gpu-pathtracer-LICENSE.txt`, `assets/js/three-mesh-bvh-LICENSE.txt`).

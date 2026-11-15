@@ -4,8 +4,9 @@ No hacen falta para usar el programa: solo para cambiarlo.
 
 **Ojo desde la v3.5**: los cambios se hacen directamente sobre `assets/js/app.js`; las partes de
 `src` se quedaron en la v3.4. No ejecutes `construir.sh` / `construir.bat` sin ponerlas antes al día,
-porque machacaría el app.js actual. Lo mismo con `npm run three`: el `three-bundle.js` de la v3.5
-lleva además three-gpu-pathtracer (el trazador de rayos del render), que `entry.js` aún no incluye.
+porque machacaría el app.js actual. `npm install` + `npm run three` sí está al día: `entry.js` incluye
+three-gpu-pathtracer y three-mesh-bvh (el trazador de rayos del render) con versiones fijas, y genera un
+`three-bundle.js` idéntico al publicado.
 
 | Archivo | Para qué |
 |---|---|
