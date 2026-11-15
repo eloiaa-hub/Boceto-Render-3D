@@ -35,4 +35,13 @@ node herramientas_desarrollo/pruebas/probar.js tolva    # solo las que contienen
 
 Termina con «N bien, M mal» y código de salida 1 si algo falla. Conviene pasarlas antes de publicar.
 
+## Miniaturas de los ejemplos
+
+Si cambias o añades un ejemplo (`ejemplos.py`), rehaz sus miniaturas (`assets/ejemplos/miniaturas/<clave>.jpg`):
+
+```
+node herramientas_desarrollo/miniaturas.js
+python3 herramientas_desarrollo/recortar_miniaturas.py
+```
+
 `extraer_ensambles.py` regenera `assets/ensambles/catalogo.js` desde `ensambles_3d.html` del programa Ensambles 3D.

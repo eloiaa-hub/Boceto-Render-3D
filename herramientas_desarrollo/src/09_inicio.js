@@ -274,9 +274,9 @@ function listaEjemplos() {
 function abrirEjemplo(e) { cargarProyecto(JSON.parse(JSON.stringify(e.proyecto))).then(() => { encuadrarTodo(); aviso('Ejemplo: ' + e.nombre); }); }
 $('#bEjemplo').onclick = () => {
   const L = listaEjemplos();
-  const html = `<p class="nota">Se cargan en lugar del proyecto actual (guárdalo antes si lo necesitas). Puedes cambiarlos, renderizarlos o pasarlos a MUEBLECAD.</p>
-    <div class="ejemplos">${L.map((e, i) => `<button data-ej="${i}"><b>${esc(e.nombre.charAt(0).toUpperCase() + e.nombre.slice(1))}</b><small>${esc(e.desc)} · ${e.proyecto.piezas.length} piezas</small></button>`).join('')}</div>`;
-  modal('Muebles de ejemplo', html, [{ txt: 'Cancelar' }], '560px');
+  const html = `<p class="nota">Muebles de ejemplo para ver cómo funciona. Se cargan en lugar del proyecto actual (guárdalo antes si lo necesitas); puedes cambiarlos, renderizarlos o pasarlos a MUEBLECAD.</p>
+    <div class="ejemplos">${L.map((e, i) => `<button data-ej="${i}" data-clave="${esc(e.clave)}"><span class="mini"><img src="assets/ejemplos/miniaturas/${esc(e.clave)}.jpg" alt="" loading="lazy" onerror="this.remove()"></span><b>${esc(e.nombre.charAt(0).toUpperCase() + e.nombre.slice(1))}</b><small>${esc(e.desc)} · ${e.proyecto.piezas.length} piezas</small></button>`).join('')}</div>`;
+  modal('🪑 Ejemplos', html, [{ txt: 'Cerrar' }], 'min(980px,96vw)');
   $$('#mCuerpo [data-ej]').forEach(b => b.onclick = () => { cerrarModal(); abrirEjemplo(L[+b.dataset.ej]); });
 };
 $('#bDespiece').onclick = () => {

@@ -11,6 +11,7 @@
 - En MUEBLECAD, las **piezas iguales se agrupan** aunque tengan nombres distintos (las cuatro patas salen como «Pata ×4») y las simétricas se indican («Lateral (1 simétrica) ×2»).
 - 🎓 **Modo básico / avanzado** (barra de arriba): el básico deja solo lo esencial para empezar en clase.
 - **Pruebas automáticas** en `herramientas_desarrollo/pruebas/probar.js`.
+- 🪑 **Ejemplos con miniatura**: la ventana de ejemplos enseña cada mueble en una tarjeta con su imagen en 3D.
 
 ## v3.5
 - **Render fotorrealista con trazado de rayos**: en 📷 Render, el motor «Fotorrealista» sigue el camino de la luz rebotando entre el mueble, el suelo y la pared, como en una foto: luz de relleno real, reflejos en el barniz, el metal y el cristal, sombras suaves y desenfoque de fondo de verdad. La imagen se va limpiando en pantalla mientras avanza. El motor «Rápido» (el de siempre) sigue disponible.

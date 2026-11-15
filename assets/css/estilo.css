@@ -188,10 +188,14 @@ input:disabled,select:disabled{opacity:.55}
 @media (max-width:1000px){ .barra button.primario .txt,.barra #bMueblecad .txt{display:none} .barra .marca b{display:none} }
 
 /* ---- v3.4: ventana de ejemplos ---- */
-.ejemplos{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.ejemplos button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 12px}
-.ejemplos button small{opacity:.75;font-weight:400}
+.ejemplos{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:8px}
+.ejemplos button{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:4px;text-align:left;padding:8px;height:auto;white-space:normal}
+.ejemplos .mini{display:block;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:linear-gradient(#f3f1ec,#e4e1da);margin-bottom:4px}
+.ejemplos .mini img{width:100%;height:100%;object-fit:cover;display:block}
+.ejemplos button b{font-size:13px;line-height:1.25}
+.ejemplos button small{opacity:.75;font-weight:400;line-height:1.35}
 .ejemplos button:hover{border-color:var(--acento)}
+.ejemplos button:hover .mini img{transform:scale(1.04);transition:transform .2s}
 .barra .ir-portada{text-decoration:none;color:inherit;opacity:.7;font-size:17px;margin-right:2px}.barra .ir-portada:hover{opacity:1}
 .cantoG .fila{padding-left:10px}
 
