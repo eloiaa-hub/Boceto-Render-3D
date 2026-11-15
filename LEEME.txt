@@ -1,4 +1,4 @@
-BOCETO A RENDER 3D — Por Eloi A.A.   (versión 3.5)
+BOCETO A RENDER 3D — Por Eloi A.A.   (versión 3.6)
 
 Abre con doble clic: Boceto_Render3D.html  (Chrome, Edge o Firefox; no necesita internet)
 Manual: ayuda/manual.html y ayuda/manual.pdf
@@ -24,6 +24,7 @@ y agrandarla; lámina técnica acotada con cajetín en PDF y DXF; despiece para 
 v3.1: las ventanas emergentes se arrastran por su título.
 v3.2: número de versión junto al nombre; apartados de los paneles plegables (▾/▸) y paneles
 izquierdo y derecho ocultables (◀ ▶).
+v3.6: ensambles de madera maciza, piezas inclinadas, tolva, ingletes en esquina, redondeos y modo básico/avanzado.
 v3.5: render fotorrealista con trazado de rayos (motor «Fotorrealista» en 📷 Render) y 16 maderas
       con veta real (escaneados CC0 de Poly Haven, en assets/texturas/pbr).
 v3.4: ▱ MUEBLECAD 2D: plano de taller del mueble (vistas y piezas desplegadas para herrajes, cotas y

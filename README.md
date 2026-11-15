@@ -1,6 +1,6 @@
 # Boceto a Render 3D y MUEBLECAD 2D — Por Eloi A.A.
 
-**Boceto a Render 3D versión 3.5** · **MUEBLECAD 2D v4** · novedades en [NOVEDADES.md](NOVEDADES.md)
+**Boceto a Render 3D versión 3.6** · **MUEBLECAD 2D v4** · novedades en [NOVEDADES.md](NOVEDADES.md)
 
 **Portada en línea:** <https://eloiaa-hub.github.io/Boceto-Render-3D/>
 
@@ -44,6 +44,7 @@ Programa de CAD 2D para muebles, también independiente (`assets/mueblecad/muebl
 - Taladros y herrajes (sistema 32, bisagras, Minifix, clavijas, tiradores, galletas, espigas) y comprobaciones.
 - Cotas UNE que siguen a las piezas y que cambian la medida con doble clic; cortes, detalles ampliados y apertura de puertas.
 - Despiece con superficie y metros de canto, tabla de taladros, CSV para el Anidador.
+- Ensambles de madera maciza, piezas inclinadas, tolvas, ingletes en esquina y redondeos (v3.6).
 - Lista de compra y presupuesto: tablero, canto, herrajes y otros conceptos, con precios que se recuerdan, IVA y CSV.
 - DXF R2000 de ida y vuelta, SVG y PDF a escala con cajetín y plantilla del centro.
 

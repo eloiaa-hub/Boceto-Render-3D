@@ -1,5 +1,17 @@
 # Novedades de Boceto a Render 3D
 
+## v3.6
+- 🪵 **Ensambles de madera maciza**: selecciona 2 piezas que se tocan (esquina o T) o una pata y sus dos travesaños y pulsa «🪵 Ensamble…». Se abre la biblioteca de *Ensambles de carpintería 3D* con los ensambles que encajan (caja y espiga a tres maderas, con retalón, pasante, doble o acuñada, horquillas, medias maderas, ingletes, colas de milano, tarugos), con sus medidas, la vista 3D y la comprobación. Con piezas de distinta sección solo se ofrecen los que lo admiten. En una mesa, el mismo ensamble se pone en las cuatro patas de una vez; si los travesaños van a distinta altura, se eligen uno detrás de otro.
+- El ensamble se ve en el **3D**, en el render y en las **vistas 2D** (aristas ocultas a trazos); suma la espiga al **largo de corte** en el despiece y el Anidador; y llega a **MUEBLECAD** con el contorno real de la pieza y las cajas en línea oculta. Tarugos y cuñas pasan a la lista de compra.
+- **Piezas inclinadas**: ángulo sobre X y sobre Z, girando sobre un extremo o el centro, con los extremos cortados en horizontal. «⟋ Abrir hacia fuera…» abre las patas de una mesa en diagonal, hacia los lados o hacia delante.
+- ⌴ **Tolva**: cuatro laterales inclinados a inglete compuesto (el diálogo da los ángulos de la sierra) que se editan después con «Editar tolva…».
+- ◿ **Inglete en esquina** entre 2 o 3 piezas (caja de tablero o nudo de tres listones), que se rehace solo al cambiar las medidas.
+- **Redondear aristas** con radio: esquinas redondeadas vistas en planta (tapas de mesa), de frente o de lado, eligiendo las esquinas.
+- El despiece y MUEBLECAD dan la **madera de partida y los ángulos de corte** (testa: inglete y bisel; canto: bisel) de las piezas inclinadas o a inglete; en MUEBLECAD salen desplegadas (la tolva, como trapecios).
+- En MUEBLECAD, las **piezas iguales se agrupan** aunque tengan nombres distintos (las cuatro patas salen como «Pata ×4») y las simétricas se indican («Lateral (1 simétrica) ×2»).
+- 🎓 **Modo básico / avanzado** (barra de arriba): el básico deja solo lo esencial para empezar en clase.
+- **Pruebas automáticas** en `herramientas_desarrollo/pruebas/probar.js`.
+
 ## v3.5
 - **Render fotorrealista con trazado de rayos**: en 📷 Render, el motor «Fotorrealista» sigue el camino de la luz rebotando entre el mueble, el suelo y la pared, como en una foto: luz de relleno real, reflejos en el barniz, el metal y el cristal, sombras suaves y desenfoque de fondo de verdad. La imagen se va limpiando en pantalla mientras avanza. El motor «Rápido» (el de siempre) sigue disponible.
 - Con una **gráfica modesta** (integradas Intel o Radeon), el render fotorrealista se adapta: va por trozos pequeños con pausas y se bloquean el 4K y las calidades altas a tamaños grandes; el programa lo avisa en el propio diálogo.
