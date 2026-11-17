@@ -336,8 +336,8 @@ function dirLuz(az, alt) {
 function ajustarSombra(luz, c, r, dir) {
   luz.target.position.copy(c);
   luz.position.copy(c).addScaledVector(dir, r * 4);
-  const s = luz.shadow.camera, k = r * 1.9;
-  s.left = -k; s.right = k; s.top = k; s.bottom = -k; s.near = r * .5; s.far = r * 8; s.updateProjectionMatrix();
+  const s = luz.shadow.camera, k = r * (P.escena && P.escena.escenario === 'salon' ? 6 : 1.9);   // en la habitación, que la sombra cubra todo el suelo y la pared
+  s.left = -k; s.right = k; s.top = k; s.bottom = -k; s.near = r * .5; s.far = r * (P.escena && P.escena.escenario === 'salon' ? 14 : 8); s.updateProjectionMatrix();
 }
 function colocarLuces() {
   const E = P.escena, { c, r } = radioEscena();
@@ -356,32 +356,22 @@ function fondoTextura(hex) {
   x.fillStyle = g; x.fillRect(0, 0, 16, 256);
   const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t;
 }
-const FONDOS = { blanco: '#efeeea', gris: '#b9bbbd', oscuro: '#2a2d31', salon: '#d9d4cc' };
+const FONDOS = { blanco: '#efeeea', gris: '#b9bbbd', oscuro: '#2a2d31', salon: '#d9d4cc', foto: '#d9d4cc' };
 function decorado() {
   const E = P.escena, { c, b } = radioEscena(true), r = radioEscena().r;
   for (const o of grupoDecorado.children) if (o !== sombraSuelo && o !== contacto) o.geometry.dispose();
   grupoDecorado.clear();
-  if (escena.background && escena.background.dispose) escena.background.dispose();
-  escena.background = fondoTextura(E.fondo);
+  if (escena.background && escena.background.dispose && escena.background !== texFoto) escena.background.dispose();
+  if (E.escenario === 'foto' && E.foto) { escena.background = texturaFotoFondo(E.foto); encajarFotoFondo(); }
+  else { if (escena.background === texFoto) escena.background = null; escena.background = fondoTextura(E.fondo); }
   sombraSuelo.scale.set(r * 14, r * 14, 1); sombraSuelo.position.set(c.x, 0, c.z);
   sombraSuelo.material.opacity = E.escenario === 'oscuro' ? .55 : .32;
   const fx = (b.x1 - b.x0) + 14, fz = (b.z1 - b.z0) + 14;
   contacto.scale.set(fx * 1.25, fz * 1.25, 1); contacto.position.set(c.x, .05, c.z);
   contacto.material.opacity = E.escenario === 'oscuro' ? .9 : .65;
   contacto.visible = !(P.vista.explosion > .05);
-  if (E.escenario === 'salon') {
-    const tp = textura(window.TEXTURAS.parquet, '_parquet'), tw = textura(window.TEXTURAS.pared, '_pared');
-    const L = r * 16;
-    const gs = new T.PlaneGeometry(L, L); escalarUV(gs, L / 160);
-    const suelo = new T.Mesh(gs, new T.MeshPhysicalMaterial({ map: tp, roughness: .45, clearcoat: .3, clearcoatRoughness: .2 }));
-    suelo.rotation.x = -Math.PI / 2; suelo.position.set(c.x, 0, c.z); suelo.receiveShadow = true;
-    const gp = new T.PlaneGeometry(L, 400); escalarUV(gp, L / 160, 400 / 160);
-    const pared = new T.Mesh(gp, new T.MeshStandardMaterial({ map: tw, roughness: .95 }));
-    pared.position.set(c.x, 200, b.z0 - 12); pared.receiveShadow = true;
-    const rod = new T.Mesh(new T.BoxGeometry(L, 8, 1.4), new T.MeshStandardMaterial({ color: 0xf4f2ee, roughness: .6 }));
-    rod.position.set(c.x, 4, b.z0 - 11.3); rod.castShadow = rod.receiveShadow = true;
-    grupoDecorado.add(suelo, pared, rod);
-  } else grupoDecorado.add(sombraSuelo, contacto);
+  if (E.escenario === 'salon') decoradoHabitacion(E, c, b, r);
+  else grupoDecorado.add(sombraSuelo, contacto);
 }
 function escalarUV(g, ku, kv) { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * ku, uv.getY(i) * (kv || ku)); }
 
@@ -400,7 +390,7 @@ $$('[data-cam]').forEach(b => b.onclick = () => {
 function lente() { camara.fov = 2 * T.MathUtils.radToDeg(Math.atan(24 / 2 / P.escena.lente)); camara.updateProjectionMatrix(); }
 function ajustar3D() {
   const r = $('#v3d').getBoundingClientRect(); if (r.width < 2) return;
-  renderer.setSize(r.width, r.height, false); camara.aspect = r.width / r.height; camara.updateProjectionMatrix(); render3D();
+  renderer.setSize(r.width, r.height, false); camara.aspect = r.width / r.height; camara.updateProjectionMatrix(); if (P.escena.escenario === 'foto') encajarFotoFondo(); render3D();
 }
 let pend3D = false;
 function render3D() { pend3D = true; }
@@ -438,6 +428,8 @@ for (const [id, k] of Object.entries(ESC)) {
   $('#' + id).addEventListener('input', e => {
     let v = e.target.value; if (k !== 'escenario' && k !== 'fondo') v = parseFloat(v);
     P.escena[k] = v;
+    if (k === 'escenario' && v === 'foto' && !P.escena.foto) { $('#fFotoFondo').click(); }
+    if (k === 'escenario' && typeof pintarOpcionesEscena === 'function') setTimeout(pintarOpcionesEscena);
     if (k === 'escenario') { P.escena.fondo = FONDOS[v]; $('#eFondo').value = FONDOS[v]; if (v === 'oscuro') { P.escena.expo = 1.15; $('#eExpo').value = 1.15; } }
     if (k === 'lente') { lente(); encuadrar3D(); }
     if (k === 'dof' && v > 0) aviso('El desenfoque se ve en el render final. Sube la calidad para que quede suave.');
@@ -446,6 +438,7 @@ for (const [id, k] of Object.entries(ESC)) {
 }
 function pintarEscena() {
   for (const [id, k] of Object.entries(ESC)) $('#' + id).value = P.escena[k];
+  if (typeof pintarOpcionesEscena === 'function') pintarOpcionesEscena();
   $('#rAbrir').value = P.vista.abrir || 0; $('#rExplosion').value = P.vista.explosion || 0; lente();
 }
 
@@ -658,7 +651,7 @@ async function renderFoto(W, H, N) {
     escena.traverseVisible(o => { if (o.isMesh && !Array.isArray(o.material) && o.geometry.groups.length && !extras.includes(o)) { const g = o.geometry.clone(); g.clearGroups(); geomAnt.push([o, o.geometry]); o.geometry = g; } });
     // escena: fuera ayudas, sombras falsas y luces del rasterizado
     const dirAtras = controles.target.clone().sub(camara.position).setY(0); if (dirAtras.lengthSq() < 1e-6) dirAtras.set(0, 0, -1); dirAtras.normalize();
-    if (E.escenario !== 'salon') {
+    if (E.escenario !== 'salon' && E.escenario !== 'foto') {
       const ciclo = new T.Mesh(cicloramaGeom(c, r, dirAtras), new T.MeshStandardMaterial({ color: new T.Color(E.fondo), roughness: .9 }));
       tangentesSeguras(ciclo.geometry); ciclo.userData.propio = true; escena.add(ciclo); extras.push(ciclo);
     }
@@ -670,7 +663,7 @@ async function renderFoto(W, H, N) {
     // entorno de estudio para el relleno y los reflejos; el fondo, del color del escenario
     cubo = entornoCubo(r2);
     escena.environment = cubo.texture; escena.environmentIntensity = E.amb * .55; // menos relleno que en la vista 3D: sombra del mueble más marcada
-    escena.background = new T.Color(E.fondo);
+    escena.background = E.escenario === 'foto' && texFoto ? texFoto : new T.Color(E.fondo);
     pt = new T.WebGLPathTracer(r2);
     pt.renderToCanvas = false; pt.rasterizeScene = false; pt.renderDelay = 0; pt.minSamples = 0; pt.fadeDuration = 0;
     pt.bounces = GPU.modesta ? 4 : 6; pt.transmissiveBounces = GPU.modesta ? 6 : 8; // pocos rebotes más apenas se notan pt.filterGlossyFactor = .5; pt.multipleImportanceSampling = true;

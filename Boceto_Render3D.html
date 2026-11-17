@@ -11,7 +11,7 @@
   <div class="marca">
     <a href="index.html" class="ir-portada" title="Portada: Boceto a Render 3D y MUEBLECAD 2D">⌂</a>
     <span class="logo">◩</span>
-    <div><b>Boceto a Render 3D</b> <span class="version" id="version" title="Versión del programa">v3.6</span> <span class="autor">— Por Eloi A.A.</span></div>
+    <div><b>Boceto a Render 3D</b> <span class="version" id="version" title="Versión del programa">v3.7</span> <span class="autor">— Por Eloi A.A.</span></div>
   </div>
   <div class="grupo">
     <button id="bNuevo" title="Proyecto nuevo">🗋 Nuevo</button>
@@ -213,8 +213,13 @@
         <option value="blanco">Estudio blanco</option>
         <option value="gris">Estudio gris</option>
         <option value="oscuro">Estudio oscuro</option>
-        <option value="salon">Salón (parquet y pared)</option>
+        <option value="salon">Habitación (suelo y pared)</option>
+        <option value="foto">Foto de fondo</option>
       </select></label>
+      <label class="fila oculto" id="filaSuelo">Suelo <select id="eSuelo"></select></label>
+      <label class="fila oculto" id="filaPared">Pared <select id="ePared"></select></label>
+      <label class="fila oculto" id="filaColorPared">Color de la pared <input type="color" id="eColorPared" value="#ece7df"></label>
+      <div class="fila oculto" id="filaFoto"><span>Foto</span><button id="bFotoFondo" title="Una foto de una habitación, un taller o un exterior: el mueble se ve delante, con su sombra">🖼 Elegir foto…</button><input type="file" id="fFotoFondo" accept="image/*" hidden></div>
       <label class="fila">Color de fondo <input type="color" id="eFondo" value="#efeeea"></label>
       <label class="fila">Luz: giro <input type="range" id="eAzimut" min="-180" max="180" step="1" value="-40"></label>
       <label class="fila">Luz: altura <input type="range" id="eAltura" min="5" max="89" step="1" value="48"></label>

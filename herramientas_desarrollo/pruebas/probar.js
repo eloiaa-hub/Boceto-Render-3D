@@ -135,6 +135,23 @@ prueba('modo básico: oculta las herramientas avanzadas', async ctx => {
   cierto(await p.evaluate(() => !document.body.classList.contains('basico') && getComputedStyle(document.querySelector('#formaSec')).display !== 'none'), 'en avanzado no se ven');
 });
 
+prueba('escena: suelos y paredes de la habitación y foto de fondo', async ctx => {
+  const p = await abrirBoceto(ctx, 2);
+  await p.selectOption('#eEscenario', 'salon');
+  cierto(await p.evaluate(() => !document.querySelector('#filaSuelo').classList.contains('oculto')), 'no aparece el suelo');
+  const suelos = await p.evaluate(() => [...document.querySelectorAll('#eSuelo option')].map(o => o.value));
+  for (const s of suelos.concat(['ladrillo', 'azulejo', 'listones'])) {
+    await p.evaluate(s => __app.texturaDecorado(s), s);
+    await p.waitForFunction(s => __app.texturaDecorado(s).listo || s === 'clasico', s, { timeout: 15000 }).catch(() => { throw new Error('no se hace la textura ' + s); });
+  }
+  for (const s of suelos) await p.selectOption('#eSuelo', s);
+  for (const w of ['lisa', 'ladrillo', 'azulejo', 'listones', 'ninguna']) await p.selectOption('#ePared', w);
+  const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.selectOption('#eEscenario', 'foto')]);
+  await fc.setFiles(require('path').join(RAIZ, 'ayuda', 'img', 'escenarios.jpg')); await p.waitForTimeout(800);
+  cierto(await p.evaluate(() => (__app.P().escena.foto || '').startsWith('data:image/jpeg')), 'la foto no se guarda en el proyecto');
+  cierto(!p._err.length, 'errores: ' + p._err.join(' | '));
+});
+
 (async () => {
   const b = await chromium.launch(); let ok = 0, mal = 0; const t0 = Date.now();
   for (const t of pruebas.filter(t => t.nombre.includes(filtro))) {

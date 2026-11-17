@@ -1,5 +1,11 @@
 # Novedades de Boceto a Render 3D
 
+## v3.7
+- 🏠 **Escenario «Habitación»** (antes «Salón») con suelo y pared a elegir. Suelos: tarima de roble, arce, nogal o pino, espiga de roble o de nogal, hormigón pulido y baldosa de 60 × 60 (y el parquet clásico). Paredes: lisa del color que quieras, ladrillo visto, azulejo metro blanco, listones de roble o sin pared.
+- **Parquet nuevo con las maderas escaneadas**: cada lama sale de un trozo distinto de la madera, con su tono, su relieve y la junta biselada; las texturas se hacen en el momento y se repiten sin costura.
+- 🖼 **Foto de fondo**: una foto propia detrás del mueble, que deja su sombra encima; también en el render fotorrealista.
+- En la habitación, la sombra cubre todo el suelo (antes podían salir bandas oscuras en el suelo lejano).
+
 ## v3.6
 - 🪵 **Ensambles de madera maciza**: selecciona 2 piezas que se tocan (esquina o T) o una pata y sus dos travesaños y pulsa «🪵 Ensamble…». Se abre la biblioteca de *Ensambles de carpintería 3D* con los ensambles que encajan (caja y espiga a tres maderas, con retalón, pasante, doble o acuñada, horquillas, medias maderas, ingletes, colas de milano, tarugos), con sus medidas, la vista 3D y la comprobación. Con piezas de distinta sección solo se ofrecen los que lo admiten. En una mesa, el mismo ensamble se pone en las cuatro patas de una vez; si los travesaños van a distinta altura, se eligen uno detrás de otro.
 - El ensamble se ve en el **3D**, en el render y en las **vistas 2D** (aristas ocultas a trazos); suma la espiga al **largo de corte** en el despiece y el Anidador; y llega a **MUEBLECAD** con el contorno real de la pieza y las cajas en línea oculta. Tarugos y cuñas pasan a la lista de compra.
