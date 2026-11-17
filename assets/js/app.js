@@ -8,7 +8,7 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const T = window.THREE;
 const CLAVE_LS = 'boceto3d.proyecto';
-const VERSION = '3.7';
+const VERSION = '3.7.1';
 
 /* ===================== MATERIALES ===================== */
 const MATERIALES = {
@@ -78,7 +78,7 @@ function nucleoDe(p) {
 
 /* ===================== ESTADO ===================== */
 function escenaDefecto() {
-  return { escenario: 'blanco', suelo: 'tarima_roble', pared: 'lisa', colorPared: '#ece7df', foto: null, fondo: '#efeeea', azimut: -40, altura: 48, suave: .55, intens: 1.6, amb: .7, expo: 1, lente: 50, dof: 0 };
+  return { escenario: 'blanco', suelo: 'tarima_roble', pared: 'lisa', colorPared: '#ece7df', foto: null, fondo: '#efeeea', azimut: -40, altura: 48, suave: .55, intens: 1.6, amb: .7, expo: 1, lente: 50, dof: 0, rasante: false };
 }
 function proyectoVacio() {
   return { app: 'Boceto a Render 3D', version: 2, versionPrograma: VERSION, nombre: 'proyecto', piezas: [], grupos: {}, bocetos: {}, referencia: null,
@@ -2216,16 +2216,24 @@ function dirLuz(az, alt) {
 function ajustarSombra(luz, c, r, dir) {
   luz.target.position.copy(c);
   luz.position.copy(c).addScaledVector(dir, r * 4);
-  const s = luz.shadow.camera, k = r * (P.escena && P.escena.escenario === 'salon' ? 6 : 1.9);   // en la habitación, que la sombra cubra todo el suelo y la pared
-  s.left = -k; s.right = k; s.top = k; s.bottom = -k; s.near = r * .5; s.far = r * (P.escena && P.escena.escenario === 'salon' ? 14 : 8); s.updateProjectionMatrix();
+  const s = luz.shadow.camera, k = r * 1.9;
+  s.left = -k; s.right = k; s.top = k; s.bottom = -k; s.near = r * .5; s.far = r * 8; s.updateProjectionMatrix();
+}
+// luz efectiva: la rasante va muy baja (como una ventana a media tarde) y con poco relleno, para que se lean la sombra y el relieve;
+// en la habitación y con foto de fondo, menos relleno que en el estudio: si no, la sombra del mueble apenas se ve en el suelo
+function luzEscena(E) {
+  const hab = E.escenario === 'salon' || E.escenario === 'foto';
+  if (E.rasante) return { alt: 10, kI: 1.8, kA: hab ? .3 : .4 };
+  return { alt: E.altura, kI: hab ? 1.15 : 1, kA: hab ? .55 : 1 };
 }
 function colocarLuces() {
-  const E = P.escena, { c, r } = radioEscena();
-  ajustarSombra(luzPrincipal, c, r, dirLuz(E.azimut, E.altura));
-  luzPrincipal.intensity = E.intens * 1.25;
+  const E = P.escena, { c, r } = radioEscena(), L = luzEscena(E);
+  ajustarSombra(luzPrincipal, c, r, dirLuz(E.azimut, L.alt));
+  luzPrincipal.intensity = E.intens * 1.25 * L.kI;
   luzPrincipal.shadow.radius = 1 + E.suave * 6;
   renderer.toneMappingExposure = E.expo;
-  escena.environmentIntensity = E.amb;
+  escena.environmentIntensity = E.amb * L.kA;
+  const al = $('#eAltura'); if (al) al.disabled = !!E.rasante;
   render3D();
 }
 function fondoTextura(hex) {
@@ -2316,8 +2324,10 @@ for (const [id, k] of Object.entries(ESC)) {
     colocarLuces(); decorado(); render3D(); guardarLocalPronto();
   });
 }
+$('#eRasante').addEventListener('change', e => { P.escena.rasante = e.target.checked; colocarLuces(); render3D(); guardarLocalPronto(); });
 function pintarEscena() {
   for (const [id, k] of Object.entries(ESC)) $('#' + id).value = P.escena[k];
+  $('#eRasante').checked = !!P.escena.rasante; $('#eAltura').disabled = !!P.escena.rasante;
   if (typeof pintarOpcionesEscena === 'function') pintarOpcionesEscena();
   $('#rAbrir').value = P.vista.abrir || 0; $('#rExplosion').value = P.vista.explosion || 0; lente();
 }
@@ -2382,8 +2392,8 @@ async function renderFinal(W, H, N) {
     escena.environment = env2; grupoAyudas.visible = false; contacto.visible = false;
     luzPrincipal.shadow.mapSize.set(4096, 4096); luzPrincipal.shadow.map && luzPrincipal.shadow.map.dispose(); luzPrincipal.shadow.map = null;
     luzPrincipal.shadow.radius = 1.5;
-    const E = P.escena, { c, r } = radioEscena(), base = dirLuz(E.azimut, E.altura);
-    const amb = E.amb;
+    const E = P.escena, { c, r } = radioEscena(), LE = luzEscena(E), base = dirLuz(E.azimut, LE.alt);
+    const amb = E.amb * LE.kA;
     escena.environmentIntensity = amb * .35;
     luzCielo.intensity = 0; sombraSuelo.material.opacity = E.escenario === 'oscuro' ? .6 : .42;
     const ang = .03 + E.suave * .28;
@@ -2536,13 +2546,13 @@ async function renderFoto(W, H, N) {
       tangentesSeguras(ciclo.geometry); ciclo.userData.propio = true; escena.add(ciclo); extras.push(ciclo);
     }
     // luz principal: ventana de luz (área) tan grande como pida la suavidad, en la dirección elegida
-    const dir = dirLuz(E.azimut, E.altura), dist = r * 4, ang = .03 + E.suave * .28, lado = Math.max(1, 2 * dist * Math.tan(ang));
-    const Ed = E.intens * 1.5; // algo más que la luz direccional de la vista 3D, para que se note la sombra
+    const LE = luzEscena(E), dir = dirLuz(E.azimut, LE.alt), dist = r * 4, ang = .03 + E.suave * .28, lado = Math.max(1, 2 * dist * Math.tan(ang));
+    const Ed = E.intens * 1.5 * LE.kI; // algo más que la luz direccional de la vista 3D, para que se note la sombra
     const area = new T.RectAreaLight(0xfff4e8, Ed * dist * dist / (lado * lado), lado, lado);
     area.position.copy(c).addScaledVector(dir, dist); area.lookAt(c); escena.add(area); extras.push(area);
     // entorno de estudio para el relleno y los reflejos; el fondo, del color del escenario
     cubo = entornoCubo(r2);
-    escena.environment = cubo.texture; escena.environmentIntensity = E.amb * .55; // menos relleno que en la vista 3D: sombra del mueble más marcada
+    escena.environment = cubo.texture; escena.environmentIntensity = E.amb * .55 * LE.kA; // menos relleno que en la vista 3D: sombra del mueble más marcada
     escena.background = E.escenario === 'foto' && texFoto ? texFoto : new T.Color(E.fondo);
     pt = new T.WebGLPathTracer(r2);
     pt.renderToCanvas = false; pt.rasterizeScene = false; pt.renderDelay = 0; pt.minSamples = 0; pt.fadeDuration = 0;
@@ -2644,18 +2654,19 @@ function texturaDecorado(clave) {
   const mk = (c, datos) => { const t = new T.CanvasTexture(c); t.colorSpace = datos ? T.NoColorSpace : T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
   const R = { map: mk(col), normalMap: mk(lienzo(4), true), roughnessMap: mk(rug, true), cm: 240, listo: false };
   cacheDecor[clave] = R;
-  const fin = () => { const nm = normalesDeRelieve(alt, R.fuerza || 3); R.normalMap.image = nm; [R.map, R.normalMap, R.roughnessMap].forEach(t => t.needsUpdate = true); R.listo = true; render3D(); };
+  const fin = () => { const nm = normalesDeRelieve(alt, R.fuerza || 3); R.normalMap.image = nm; [R.map, R.normalMap, R.roughnessMap].forEach(t => { t.dispose(); t.needsUpdate = true; }); R.listo = true; render3D(); };
   const S = SUELOS[clave], P_ = PAREDES[clave];
   const cx = col.getContext('2d'), ax = alt.getContext('2d'), rx = rug.getContext('2d'), rnd = azar(7 + clave.length * 131);
   if (S && (S.tipo === 'tarima' || S.tipo === 'espiga')) {
     const B = window.TEXTURAS_PBR && TEXTURAS_PBR[S.madera]; if (!B) { R.map.image = lienzo(4); return R; }
+    // tarima: lamas de 18 × 140 cm al tresbolillo, en un dibujo de 280 × 270 cm (15 hileras)
+    // espiga: tablillas de 9 × 54 cm (6:1) a 45°; el dibujo es de 12·9·√2 × 2·54·√2 cm
+    // (el tamaño del lienzo se fija ya: si la textura llega a la tarjeta gráfica con otro tamaño, al cambiarlo quedaba una banda negra)
+    const T_ = S.tipo === 'tarima', w = T_ ? 18 : 9, l = T_ ? 140 : 54;
+    const anchoCm = T_ ? 2 * l : 12 * w * Math.SQRT2, altoCm = T_ ? 15 * w : 2 * l * Math.SQRT2;
+    R.cm = anchoCm; col.height = Math.round(N * altoCm / anchoCm); alt.height = rug.height = Math.round(col.height / 2);
     cargarImagen(B.color).then(img => {
       const pxcm = img.width / (B.cm || 100);                                          // píxeles de la madera por cm
-      // tarima: lamas de 18 × 140 cm al tresbolillo, en un dibujo de 280 × 270 cm (15 hileras)
-      // espiga: tablillas de 9 × 54 cm (6:1) a 45°; el dibujo es de 12·9·√2 × 2·54·√2 cm
-      const T_ = S.tipo === 'tarima', w = T_ ? 18 : 9, l = T_ ? 140 : 54;
-      const anchoCm = T_ ? 2 * l : 12 * w * Math.SQRT2, altoCm = T_ ? 15 * w : 2 * l * Math.SQRT2;
-      R.cm = anchoCm; col.height = Math.round(N * altoCm / anchoCm); alt.height = rug.height = Math.round(col.height / 2);
       const k = N / anchoCm, ka = k / 2;
       const lama = (x0, y0, L, W, rot, u, v, tono, brillo) => {   // una lama: en el lienzo de color, de relieve y de rugosidad
         for (const [c, kk, modo] of [[cx, k, 'col'], [ax, ka, 'alt'], [rx, ka, 'rug']]) {

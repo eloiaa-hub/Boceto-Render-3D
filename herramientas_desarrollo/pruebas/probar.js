@@ -146,6 +146,9 @@ prueba('escena: suelos y paredes de la habitación y foto de fondo', async ctx =
   }
   for (const s of suelos) await p.selectOption('#eSuelo', s);
   for (const w of ['lisa', 'ladrillo', 'azulejo', 'listones', 'ninguna']) await p.selectOption('#ePared', w);
+  await p.check('#eRasante');
+  cierto(await p.evaluate(() => __app.P().escena.rasante === true && document.querySelector('#eAltura').disabled), 'la luz rasante no se aplica');
+  await p.uncheck('#eRasante');
   const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.selectOption('#eEscenario', 'foto')]);
   await fc.setFiles(require('path').join(RAIZ, 'ayuda', 'img', 'escenarios.jpg')); await p.waitForTimeout(800);
   cierto(await p.evaluate(() => (__app.P().escena.foto || '').startsWith('data:image/jpeg')), 'la foto no se guarda en el proyecto');

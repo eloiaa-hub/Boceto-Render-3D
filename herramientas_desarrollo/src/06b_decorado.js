@@ -48,18 +48,19 @@ function texturaDecorado(clave) {
   const mk = (c, datos) => { const t = new T.CanvasTexture(c); t.colorSpace = datos ? T.NoColorSpace : T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
   const R = { map: mk(col), normalMap: mk(lienzo(4), true), roughnessMap: mk(rug, true), cm: 240, listo: false };
   cacheDecor[clave] = R;
-  const fin = () => { const nm = normalesDeRelieve(alt, R.fuerza || 3); R.normalMap.image = nm; [R.map, R.normalMap, R.roughnessMap].forEach(t => t.needsUpdate = true); R.listo = true; render3D(); };
+  const fin = () => { const nm = normalesDeRelieve(alt, R.fuerza || 3); R.normalMap.image = nm; [R.map, R.normalMap, R.roughnessMap].forEach(t => { t.dispose(); t.needsUpdate = true; }); R.listo = true; render3D(); };
   const S = SUELOS[clave], P_ = PAREDES[clave];
   const cx = col.getContext('2d'), ax = alt.getContext('2d'), rx = rug.getContext('2d'), rnd = azar(7 + clave.length * 131);
   if (S && (S.tipo === 'tarima' || S.tipo === 'espiga')) {
     const B = window.TEXTURAS_PBR && TEXTURAS_PBR[S.madera]; if (!B) { R.map.image = lienzo(4); return R; }
+    // tarima: lamas de 18 × 140 cm al tresbolillo, en un dibujo de 280 × 270 cm (15 hileras)
+    // espiga: tablillas de 9 × 54 cm (6:1) a 45°; el dibujo es de 12·9·√2 × 2·54·√2 cm
+    // (el tamaño del lienzo se fija ya: si la textura llega a la tarjeta gráfica con otro tamaño, al cambiarlo quedaba una banda negra)
+    const T_ = S.tipo === 'tarima', w = T_ ? 18 : 9, l = T_ ? 140 : 54;
+    const anchoCm = T_ ? 2 * l : 12 * w * Math.SQRT2, altoCm = T_ ? 15 * w : 2 * l * Math.SQRT2;
+    R.cm = anchoCm; col.height = Math.round(N * altoCm / anchoCm); alt.height = rug.height = Math.round(col.height / 2);
     cargarImagen(B.color).then(img => {
       const pxcm = img.width / (B.cm || 100);                                          // píxeles de la madera por cm
-      // tarima: lamas de 18 × 140 cm al tresbolillo, en un dibujo de 280 × 270 cm (15 hileras)
-      // espiga: tablillas de 9 × 54 cm (6:1) a 45°; el dibujo es de 12·9·√2 × 2·54·√2 cm
-      const T_ = S.tipo === 'tarima', w = T_ ? 18 : 9, l = T_ ? 140 : 54;
-      const anchoCm = T_ ? 2 * l : 12 * w * Math.SQRT2, altoCm = T_ ? 15 * w : 2 * l * Math.SQRT2;
-      R.cm = anchoCm; col.height = Math.round(N * altoCm / anchoCm); alt.height = rug.height = Math.round(col.height / 2);
       const k = N / anchoCm, ka = k / 2;
       const lama = (x0, y0, L, W, rot, u, v, tono, brillo) => {   // una lama: en el lienzo de color, de relieve y de rugosidad
         for (const [c, kk, modo] of [[cx, k, 'col'], [ax, ka, 'alt'], [rx, ka, 'rug']]) {

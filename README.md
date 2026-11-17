@@ -1,6 +1,6 @@
 # Boceto a Render 3D y MUEBLECAD 2D — Por Eloi A.A.
 
-**Boceto a Render 3D versión 3.7** · **MUEBLECAD 2D v4** · novedades en [NOVEDADES.md](NOVEDADES.md)
+**Boceto a Render 3D versión 3.7.1** · **MUEBLECAD 2D v4** · novedades en [NOVEDADES.md](NOVEDADES.md)
 
 **Portada en línea:** <https://eloiaa-hub.github.io/Boceto-Render-3D/>
 

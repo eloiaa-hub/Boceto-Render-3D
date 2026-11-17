@@ -8,7 +8,7 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const T = window.THREE;
 const CLAVE_LS = 'boceto3d.proyecto';
-const VERSION = '3.7';
+const VERSION = '3.7.1';
 
 /* ===================== MATERIALES ===================== */
 const MATERIALES = {
@@ -78,7 +78,7 @@ function nucleoDe(p) {
 
 /* ===================== ESTADO ===================== */
 function escenaDefecto() {
-  return { escenario: 'blanco', suelo: 'tarima_roble', pared: 'lisa', colorPared: '#ece7df', foto: null, fondo: '#efeeea', azimut: -40, altura: 48, suave: .55, intens: 1.6, amb: .7, expo: 1, lente: 50, dof: 0 };
+  return { escenario: 'blanco', suelo: 'tarima_roble', pared: 'lisa', colorPared: '#ece7df', foto: null, fondo: '#efeeea', azimut: -40, altura: 48, suave: .55, intens: 1.6, amb: .7, expo: 1, lente: 50, dof: 0, rasante: false };
 }
 function proyectoVacio() {
   return { app: 'Boceto a Render 3D', version: 2, versionPrograma: VERSION, nombre: 'proyecto', piezas: [], grupos: {}, bocetos: {}, referencia: null,

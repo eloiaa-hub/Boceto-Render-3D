@@ -1,5 +1,10 @@
 # Novedades de Boceto a Render 3D
 
+## v3.7.1
+- 🌅 **Luz rasante** (en «Escena y luz»): una luz muy baja, como la de una ventana a media tarde, con poco relleno. Da una sombra larga y marcada y se lee el relieve de la madera y de las juntas del suelo. «Luz: giro» cambia su dirección. Se guarda en el proyecto.
+- En la habitación y con foto de fondo hay menos luz de relleno, para que la sombra del mueble se vea en el suelo sin tener que subir la luz.
+- Arreglado: en las tarimas de roble, arce y pino salían bandas grises a lo largo del suelo.
+
 ## v3.7
 - 🏠 **Escenario «Habitación»** (antes «Salón») con suelo y pared a elegir. Suelos: tarima de roble, arce, nogal o pino, espiga de roble o de nogal, hormigón pulido y baldosa de 60 × 60 (y el parquet clásico). Paredes: lisa del color que quieras, ladrillo visto, azulejo metro blanco, listones de roble o sin pared.
 - **Parquet nuevo con las maderas escaneadas**: cada lama sale de un trozo distinto de la madera, con su tono, su relieve y la junta biselada; las texturas se hacen en el momento y se repiten sin costura.
